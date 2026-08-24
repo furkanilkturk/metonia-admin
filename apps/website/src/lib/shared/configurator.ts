@@ -75,9 +75,9 @@ export function previewModule(config: ResolvedConfig | undefined): string {
 }
 
 export function previewCommand(config: ResolvedConfig | undefined): string {
-	if (!config) return 'create-metonia-admin <project-name> --yes';
+	if (!config) return 'npx create-metonia-admin@latest <project-name> --yes';
 	const bits = [
-		`create-metonia-admin ${config.projectName}`,
+		`npx create-metonia-admin@latest ${config.projectName}`,
 		`--package-manager ${config.packageManager}`,
 		`--ui ${config.ui.adapter}`,
 		`--theme ${config.ui.theme}`,

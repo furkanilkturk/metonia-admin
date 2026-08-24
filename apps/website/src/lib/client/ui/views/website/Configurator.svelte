@@ -1,7 +1,6 @@
 <script lang="ts">
 	import ChoiceField from '$lib/client/ui/components/ChoiceField.svelte';
 	import CodePanel from '$lib/client/ui/components/CodePanel.svelte';
-	import RecipeTrace from '$lib/client/ui/components/RecipeTrace.svelte';
 	import {
 		choicesFor,
 		initialDraft,
@@ -18,17 +17,6 @@
 	let themeChoices = $derived(choicesFor('ui.theme', draft));
 	let providerChoices = $derived(choicesFor('database.provider', draft));
 	let driverChoices = $derived(choicesFor('database.driver', draft));
-	let trace = $derived(
-		config
-			? [
-					config.ui.adapter,
-					config.ui.theme,
-					config.dataPattern,
-					config.database.dialect,
-					config.docker ? 'Docker' : 'No Docker'
-				]
-			: ['Resolve configuration']
-	);
 
 	function update<K extends keyof WebsiteDraft>(key: K, value: WebsiteDraft[K]) {
 		draft[key] = value;
@@ -48,6 +36,14 @@
 		copied = '';
 	}
 
+	function updateProject(event: Event) {
+		update('projectName', (event.currentTarget as HTMLInputElement).value);
+	}
+
+	function updateBoolean(key: 'docker' | 'users', event: Event) {
+		update(key, (event.currentTarget as HTMLInputElement).checked);
+	}
+
 	async function copy(value: string, target: string) {
 		try {
 			if (!navigator.clipboard) throw new Error('Clipboard unavailable');
@@ -62,96 +58,208 @@
 <section class="configurator" aria-labelledby="configurator-title">
 	<header class="configurator-head">
 		<div>
-			<p class="eyebrow">Interactive assembly desk</p>
-			<h2 id="configurator-title">Build the recipe. Inspect the output.</h2>
+			<p class="eyebrow">Live project assembler</p>
+			<h2 id="configurator-title">Configure the stack. See where every choice lands.</h2>
 		</div>
-		<p class="registry-note"><span aria-hidden="true"></span>Registry-linked</p>
+		<p class="registry-note"><span aria-hidden="true"></span>Synced with the capability registry</p>
 	</header>
-	<p class="lede">
-		Every option comes from the same capability catalog as the CLI. Unsupported choices stay in
-		view, with selection disabled and their status left intact.
-	</p>
 
 	<div class="workbench">
-		<div class="controls">
-			<section class="station" aria-labelledby="station-project">
-				<header><span>01</span><div><h3 id="station-project">Project</h3><p>Name the starter and choose its command runner.</p></div></header>
-				<div class="station-body">
-					<div class="project-field">
-						<div><label for="project-name">Project name</label><p id="project-name-help">Lowercase letters, numbers, and hyphens.</p></div>
-						<input bind:value={draft.projectName} aria-describedby="project-name-help" id="project-name" autocomplete="off" spellcheck="false" />
-					</div>
-					<ChoiceField id="package-manager" label="Package manager" description="Controls generated install and script commands." value={draft.packageManager} options={choicesFor('packageManager', draft)} onchange={(value) => update('packageManager', value)} />
-				</div>
-			</section>
-
-			<section class="station" aria-labelledby="station-interface">
-				<header><span>02</span><div><h3 id="station-interface">Interface</h3><p>Pair a verified UI adapter with one of its own themes.</p></div></header>
-				<div class="station-body">
-					<ChoiceField id="ui-adapter" label="UI adapter" description="Unavailable integrations stay visible and disabled." value={draft.uiAdapter} options={choicesFor('ui.adapter', draft)} onchange={(value) => update('uiAdapter', value)} />
-					<ChoiceField id="ui-theme" label="Theme" description="Theme support belongs to the selected adapter." value={draft.uiTheme} options={themeChoices} onchange={(value) => update('uiTheme', value)} />
-				</div>
-			</section>
-
-			<section class="station" aria-labelledby="station-boundary">
-				<header><span>03</span><div><h3 id="station-boundary">Data boundary</h3><p>Choose how pages reach server-side application code.</p></div></header>
-				<div class="station-body">
-					<ChoiceField id="data-pattern" label="Boundary" description="Standard SvelteKit is the native default; Remote Functions remain experimental." value={draft.dataPattern} options={choicesFor('dataPattern', draft)} onchange={(value) => update('dataPattern', value)} />
-					<ChoiceField id="validation" label="Validation" description="Shared schemas, enforced again at the server boundary." value={draft.validation} options={choicesFor('validation', draft)} onchange={(value) => update('validation', value)} />
-				</div>
-			</section>
-
-			<section class="station" aria-labelledby="station-persistence">
-				<header><span>04</span><div><h3 id="station-persistence">Persistence</h3><p>Keep ORM, dialect, provider, and driver as separate choices.</p></div></header>
-				<div class="station-body">
-					<ChoiceField id="orm" label="ORM" description="Persistence code stays in $lib/server." value={draft.orm} options={choicesFor('orm', draft)} onchange={(value) => update('orm', value)} />
-					<ChoiceField id="database-dialect" label="Dialect" description="The database language, independent from hosting." value={draft.dialect} options={choicesFor('database.dialect', draft)} onchange={(value) => update('dialect', value)} />
-					<ChoiceField id="database-provider" label="Provider" description="Providers are filtered by the selected dialect." value={draft.provider} options={providerChoices} onchange={(value) => update('provider', value)} />
-					<ChoiceField id="database-driver" label="Driver" description="Drivers are filtered by the selected provider." value={draft.driver} options={driverChoices} onchange={(value) => update('driver', value)} />
-				</div>
-			</section>
-
-			<fieldset class="station starter-options">
-				<legend><span>05</span><strong>Starter options</strong></legend>
-				<label class="switch"><input bind:checked={draft.docker} type="checkbox" /><span><strong>Generate Docker support</strong><small>Optional; this does not imply a hosted deployment target.</small></span></label>
-				<label class="switch"><input bind:checked={draft.users} type="checkbox" /><span><strong>Include the Users example</strong><small>The canonical shared, server, and client CRUD resource.</small></span></label>
-			</fieldset>
-		</div>
-
-		<aside class="output" aria-label="Generated project preview">
+		<aside class="output" aria-label="Generated project blueprint">
 			<div class="output-head">
-				<div><p class="eyebrow">Resolved output</p><h3>{draft.projectName || 'Untitled project'}</h3></div>
-				<span class:unresolved={!result.ok} class="resolution"><i aria-hidden="true"></i>{result.ok ? 'Ready to generate' : 'Needs attention'}</span>
-			</div>
-			<div class="trace-wrap"><RecipeTrace labels={trace} compact /></div>
-
-			<div class="project-preview" aria-label="Generated architecture preview">
-				<p>Generated SvelteKit structure</p>
-				<div class="tree">
-					<span>src/lib/</span>
-					<strong>├─ client/</strong><small>UI · views · pages</small>
-					<strong>├─ shared/</strong><small>schemas · types</small>
-					<strong>└─ server/</strong><small>repositories · services</small>
+				<div>
+					<span>project / blueprint</span>
+					<h3>{draft.projectName || 'untitled-project'}</h3>
 				</div>
-				<div class="ownership"><span>Metonia runtime</span><strong>Not required</strong></div>
+				<span class:unresolved={!result.ok} class="resolution">
+					<i aria-hidden="true"></i>{result.ok ? 'resolved' : 'attention required'}
+				</span>
+			</div>
+
+			<div class="blueprint">
+				<div class="route-node node">
+					<span>route boundary</span>
+					<strong>src/routes/(admin)/+page.svelte</strong>
+					<code>{draft.dataPattern}</code>
+				</div>
+
+				<div class="connector" aria-hidden="true"><i></i><i></i><i></i></div>
+
+				<div class="boundary-grid">
+					<section class="node client-node">
+						<span>browser-safe</span>
+						<strong>$lib/client/ui</strong>
+						<code>{draft.uiAdapter} / {draft.uiTheme}</code>
+						<small>components → views → pages</small>
+					</section>
+					<section class="node shared-node">
+						<span>runtime-neutral</span>
+						<strong>$lib/shared</strong>
+						<code>{draft.validation} schemas</code>
+						<small>contracts · types · pure utilities</small>
+					</section>
+					<section class="node server-node">
+						<span>server-only</span>
+						<strong>$lib/server</strong>
+						<code>{draft.orm} → {draft.dialect}</code>
+						<small>{draft.provider} / {draft.driver}</small>
+					</section>
+				</div>
+
+				<div class="dependency-rule" aria-label="Dependency direction">
+					<code>client</code><b aria-hidden="true">→</b><code>shared</code><b aria-hidden="true">←</b><code>server</code>
+				</div>
+
+				<div class="output-modules">
+					<span><b>resource/users</b><small>{draft.users ? 'included' : 'omitted'}</small></span>
+					<span><b>docker</b><small>{draft.docker ? 'included' : 'omitted'}</small></span>
+					<span><b>package manager</b><small>{draft.packageManager}</small></span>
+				</div>
 			</div>
 
 			<div aria-live="polite">
 				{#if result.ok}
 					{#if config?.warnings.length}
-						<div class="warnings" role="status"><strong>Selection notes</strong><ul>{#each config.warnings as warning (`${warning.code}-${warning.path}-${warning.message}`)}<li>{warning.message}</li>{/each}</ul></div>
+						<div class="warnings" role="status">
+							<strong>Registry notes</strong>
+							<ul>
+								{#each config.warnings as warning (`${warning.code}-${warning.path}-${warning.message}`)}
+									<li>{warning.message}</li>
+								{/each}
+							</ul>
+						</div>
 					{/if}
 				{:else}
-					<div class="warnings error" role="alert"><strong>Resolve this configuration</strong><p>Change one of the conflicting selections in the numbered stations.</p><ul>{#each result.issues as issue (`${issue.code}-${issue.path}-${issue.message}`)}<li>{issue.message}</li>{/each}</ul></div>
+					<div class="warnings error" role="alert">
+						<strong>Resolve before generating</strong>
+						<p>Keep your selections, then change either side of each reported conflict.</p>
+						<ul>
+							{#each result.issues as issue (`${issue.code}-${issue.path}-${issue.message}`)}
+								<li>{issue.message}</li>
+							{/each}
+						</ul>
+					</div>
 				{/if}
 			</div>
 
-			<div class="previews">
-				<CodePanel label={copied === 'command' ? 'Command copied' : 'CLI command'} code={previewCommand(config)} oncopy={() => copy(previewCommand(config), 'command')} />
-				<CodePanel label={copied === 'config' ? 'Config copied' : 'metonia-admin.config.ts'} code={previewModule(config)} oncopy={() => copy(previewModule(config), 'config')} />
+			<div class="launch">
+				<div>
+					<span>{result.ok ? 'Start this project' : 'Command available after resolution'}</span>
+					<code>{previewCommand(config)}</code>
+				</div>
+				<button
+					disabled={!result.ok}
+					onclick={() => copy(previewCommand(config), 'command')}
+					type="button"
+				>
+					{copied === 'command' ? 'Copied' : 'Copy npx'}
+				</button>
 			</div>
-			<p aria-live="polite" class="sr-only">{copied === 'error' ? 'Clipboard access is unavailable.' : copied ? `${copied} preview copied.` : ''}</p>
+
+			<details class="config-source">
+				<summary>Inspect metonia-admin.config.ts</summary>
+				<CodePanel
+					label={copied === 'config' ? 'Config copied' : 'Generated configuration'}
+					code={previewModule(config)}
+					oncopy={() => copy(previewModule(config), 'config')}
+				/>
+			</details>
+			<p aria-live="polite" class="sr-only">
+				{copied === 'error'
+					? 'Clipboard access is unavailable.'
+					: copied
+						? `${copied} preview copied.`
+						: ''}
+			</p>
 		</aside>
+
+		<div class="controls" aria-label="Project selections">
+			<fieldset class="control-group">
+				<legend>Project shell</legend>
+				<div class="project-field">
+					<div>
+						<label for="project-name">Project name</label>
+						<p id="project-name-help">Lowercase letters, numbers, and hyphens.</p>
+					</div>
+					<input
+						aria-describedby="project-name-help"
+						autocomplete="off"
+						id="project-name"
+						oninput={updateProject}
+						spellcheck="false"
+						value={draft.projectName}
+					/>
+				</div>
+				<ChoiceField
+					id="package-manager"
+					label="Package manager"
+					description="Controls generated install and script commands."
+					value={draft.packageManager}
+					options={choicesFor('packageManager', draft)}
+					onchange={(value) => update('packageManager', value)}
+				/>
+			</fieldset>
+
+			<fieldset class="control-group">
+				<legend>Interface</legend>
+				<ChoiceField
+					id="ui-adapter"
+					label="UI adapter"
+					description="Unavailable integrations remain visible."
+					value={draft.uiAdapter}
+					options={choicesFor('ui.adapter', draft)}
+					onchange={(value) => update('uiAdapter', value)}
+				/>
+				<ChoiceField
+					id="ui-theme"
+					label="Theme"
+					description="Themes belong to their selected adapter."
+					value={draft.uiTheme}
+					options={themeChoices}
+					onchange={(value) => update('uiTheme', value)}
+				/>
+			</fieldset>
+
+			<fieldset class="control-group">
+				<legend>Application boundary</legend>
+				<ChoiceField
+					id="data-pattern"
+					label="Data mode"
+					description="Standard SvelteKit is the default; Remote remains experimental."
+					value={draft.dataPattern}
+					options={choicesFor('dataPattern', draft)}
+					onchange={(value) => update('dataPattern', value)}
+				/>
+				<ChoiceField
+					id="validation"
+					label="Validation"
+					description="Shared schemas enforced at the server boundary."
+					value={draft.validation}
+					options={choicesFor('validation', draft)}
+					onchange={(value) => update('validation', value)}
+				/>
+			</fieldset>
+
+			<fieldset class="control-group">
+				<legend>Persistence</legend>
+				<ChoiceField id="orm" label="ORM" description="Persistence stays in $lib/server." value={draft.orm} options={choicesFor('orm', draft)} onchange={(value) => update('orm', value)} />
+				<ChoiceField id="database-dialect" label="Dialect" description="The database language, independent of hosting." value={draft.dialect} options={choicesFor('database.dialect', draft)} onchange={(value) => update('dialect', value)} />
+				<ChoiceField id="database-provider" label="Provider" description="Filtered by the selected dialect." value={draft.provider} options={providerChoices} onchange={(value) => update('provider', value)} />
+				<ChoiceField id="database-driver" label="Driver" description="Filtered by the selected provider." value={draft.driver} options={driverChoices} onchange={(value) => update('driver', value)} />
+			</fieldset>
+
+			<fieldset class="control-group starter-options">
+				<legend>Generated extras</legend>
+				<label class="toggle">
+					<input checked={draft.docker} onchange={(event) => updateBoolean('docker', event)} type="checkbox" />
+					<span><strong>Docker support</strong><small>Local container setup; not a hosting target.</small></span>
+				</label>
+				<label class="toggle">
+					<input checked={draft.users} onchange={(event) => updateBoolean('users', event)} type="checkbox" />
+					<span><strong>Users example</strong><small>Shared, server, and client CRUD reference.</small></span>
+				</label>
+			</fieldset>
+		</div>
 	</div>
 </section>
 
@@ -159,313 +267,405 @@
 	.configurator {
 		background: var(--color-card);
 		border: 1px solid var(--color-border-strong);
-		box-shadow: 10px 10px 0 var(--color-primary-soft);
-		padding: clamp(1rem, 2.5vw, 2rem);
 	}
 
 	.configurator-head {
 		align-items: flex-start;
+		border-bottom: 1px solid var(--color-border-strong);
 		display: flex;
 		gap: 1rem;
 		justify-content: space-between;
+		padding: clamp(1rem, 2.2vw, 1.6rem);
+	}
+
+	.eyebrow,
+	.output-head span,
+	.node > span,
+	.registry-note,
+	.launch span {
+		font-family: 'IBM Plex Mono', monospace;
+		font-size: 0.61rem;
+		font-weight: 600;
+		letter-spacing: 0.065em;
+		text-transform: uppercase;
 	}
 
 	.eyebrow {
 		color: var(--color-primary);
-		font-family: 'IBM Plex Mono', monospace;
-		font-size: 0.68rem;
-		font-weight: 600;
-		letter-spacing: 0.09em;
 		margin: 0;
-		text-transform: uppercase;
 	}
 
 	h2 {
-		font-family: 'Space Grotesk', sans-serif;
-		font-size: clamp(1.6rem, 3vw, 2.35rem);
-		letter-spacing: -0.045em;
-		line-height: 1.05;
-		margin: 0.45rem 0 0;
-	}
-
-	.lede {
-		color: var(--color-muted-foreground);
-		line-height: 1.5;
-		margin: 0.9rem 0 1.5rem;
-		max-width: 48rem;
+		font-family: 'IBM Plex Sans Condensed', sans-serif;
+		font-size: clamp(1.55rem, 3vw, 2.2rem);
+		font-weight: 600;
+		letter-spacing: -0.025em;
+		line-height: 1.06;
+		margin: 0.35rem 0 0;
 	}
 
 	.registry-note {
 		align-items: center;
-		border: 1px solid var(--color-border);
+		color: var(--color-muted-foreground);
 		display: flex;
-		font-family: 'IBM Plex Mono', monospace;
-		font-size: 0.65rem;
-		gap: 0.4rem;
+		gap: 0.42rem;
 		margin: 0;
-		min-height: 2rem;
-		padding: 0 0.6rem;
+		min-height: 2.75rem;
 		white-space: nowrap;
 	}
 
 	.registry-note span {
 		background: var(--color-primary);
-		border-radius: 50%;
-		height: 0.4rem;
-		width: 0.4rem;
+		height: 0.45rem;
+		width: 0.45rem;
 	}
 
 	.workbench {
 		display: grid;
-		gap: 1rem;
+		grid-template-areas: 'output' 'controls';
 	}
 
 	.controls {
+		background: var(--color-background);
 		display: grid;
-		gap: 0.7rem;
+		gap: 0.75rem;
+		grid-area: controls;
+		padding: 0.75rem;
 	}
 
-	.station {
-		background: var(--color-raised);
+	.control-group {
+		background: var(--color-card);
 		border: 1px solid var(--color-border);
 		margin: 0;
+		min-width: 0;
+		padding: 0 0.85rem;
 	}
 
-	.station > header {
-		align-items: flex-start;
-		background: var(--color-muted);
-		border-bottom: 1px solid var(--color-border);
-		display: flex;
-		gap: 0.75rem;
-		padding: 0.75rem 0.85rem;
-	}
-
-	.station > header > span,
-	.starter-options legend > span {
-		color: var(--color-primary);
-		font-family: 'IBM Plex Mono', monospace;
-		font-size: 0.64rem;
+	.control-group legend {
+		background: var(--color-card);
+		color: var(--color-foreground);
+		font-family: 'IBM Plex Sans Condensed', sans-serif;
+		font-size: 0.94rem;
 		font-weight: 600;
-		padding-top: 0.18rem;
-	}
-
-	.station h3,
-	.output h3 {
-		font-family: 'Space Grotesk', sans-serif;
-		font-size: 1rem;
-		letter-spacing: -0.025em;
-		margin: 0;
-	}
-
-	.station header p {
-		color: var(--color-muted-foreground);
-		font-size: 0.78rem;
-		line-height: 1.35;
-		margin: 0.18rem 0 0;
-	}
-
-	.station-body {
-		padding: 0.9rem;
+		padding: 0 0.35rem;
 	}
 
 	.project-field {
+		border-bottom: 1px solid var(--color-border);
 		display: grid;
-		gap: 0.65rem;
-		padding-bottom: 1rem;
+		gap: 0.55rem;
+		padding: 0.75rem 0 0.8rem;
 	}
 
 	.project-field label {
-		font-family: 'Space Grotesk', sans-serif;
+		font-family: 'IBM Plex Sans Condensed', sans-serif;
 		font-size: 0.92rem;
 		font-weight: 600;
 	}
 
 	.project-field p,
-	.switch small {
+	.toggle small {
 		color: var(--color-muted-foreground);
 		display: block;
-		font-size: 0.79rem;
-		line-height: 1.4;
-		margin: 0.2rem 0 0;
+		font-size: 0.75rem;
+		line-height: 1.38;
+		margin: 0.16rem 0 0;
 	}
 
 	.project-field input {
-		background: var(--color-raised);
+		background: var(--color-card);
 		border: 1px solid var(--color-border-strong);
-		border-radius: 0.25rem;
+		border-radius: 0;
 		color: var(--color-foreground);
 		font-family: 'IBM Plex Mono', monospace;
+		font-size: 0.76rem;
 		min-height: 2.75rem;
 		min-width: 0;
-		padding: 0 0.65rem;
+		padding: 0 0.6rem;
 		width: 100%;
 	}
 
 	.starter-options {
-		padding: 0.9rem;
+		padding-bottom: 0.2rem;
 	}
 
-	.starter-options legend {
-		align-items: center;
-		display: flex;
-		font-family: 'Space Grotesk', sans-serif;
-		gap: 0.75rem;
-		padding: 0 0.25rem;
-	}
-
-	.switch {
+	.toggle {
 		align-items: flex-start;
 		border-top: 1px solid var(--color-border);
 		display: flex;
-		gap: 0.7rem;
-		min-height: 3.5rem;
-		padding: 0.8rem 0;
+		gap: 0.65rem;
+		min-height: 3.6rem;
+		padding: 0.75rem 0;
 	}
 
-	.switch:first-of-type {
+	.toggle:first-of-type {
 		border-top: 0;
 	}
 
-	.switch input {
+	.toggle input {
 		accent-color: var(--color-primary);
-		height: 1.25rem;
-		margin: 0.1rem 0 0;
-		width: 1.25rem;
+		height: 1.2rem;
+		margin: 0.12rem 0 0;
+		width: 1.2rem;
 	}
 
-	.switch strong {
+	.toggle strong {
+		font-family: 'IBM Plex Sans Condensed', sans-serif;
 		font-size: 0.88rem;
 	}
 
 	.output {
-		align-self: start;
-		background: var(--color-background);
-		border: 1px solid var(--color-border-strong);
+		grid-area: output;
 		min-width: 0;
-		padding: 1rem;
+		padding: clamp(0.75rem, 2vw, 1.2rem);
 	}
 
 	.output-head {
 		align-items: flex-start;
 		display: flex;
-		gap: 0.75rem;
+		gap: 0.7rem;
 		justify-content: space-between;
 	}
 
+	.output-head > div > span {
+		color: var(--color-primary);
+	}
+
 	.output h3 {
-		font-size: 1.2rem;
-		margin-top: 0.25rem;
+		font-family: 'IBM Plex Sans Condensed', sans-serif;
+		font-size: clamp(1.3rem, 3vw, 1.8rem);
+		letter-spacing: -0.025em;
+		line-height: 1;
+		margin: 0.28rem 0 0;
 		overflow-wrap: anywhere;
 	}
 
 	.resolution {
 		align-items: center;
+		color: var(--color-primary);
 		display: flex;
-		font-size: 0.72rem;
-		font-weight: 600;
-		gap: 0.4rem;
-		white-space: nowrap;
+		gap: 0.38rem;
+		line-height: 1.2;
+		max-width: 9rem;
+		text-align: right;
 	}
 
 	.resolution i {
 		background: var(--color-primary);
-		border-radius: 50%;
+		flex: 0 0 auto;
 		height: 0.45rem;
 		width: 0.45rem;
+	}
+
+	.resolution.unresolved {
+		color: var(--color-destructive);
 	}
 
 	.resolution.unresolved i {
 		background: var(--color-destructive);
 	}
 
-	.trace-wrap {
-		border-bottom: 1px solid var(--color-border);
-		border-top: 1px solid var(--color-border);
+	.blueprint {
+		background-color: #fbfcff;
+		background-image:
+			linear-gradient(#dfe6f7 1px, transparent 1px),
+			linear-gradient(90deg, #dfe6f7 1px, transparent 1px);
+		background-size: 1.25rem 1.25rem;
+		border: 1px solid var(--color-primary);
 		margin-top: 1rem;
-		padding: 0.9rem 0;
+		min-width: 0;
+		padding: clamp(0.7rem, 2vw, 1rem);
 	}
 
-	.project-preview {
-		background: var(--color-raised);
-		border: 1px solid var(--color-border);
-		margin-top: 1rem;
-		padding: 0.9rem;
+	.node {
+		background: var(--color-card);
+		border: 1px solid var(--color-primary);
+		box-shadow: 3px 3px 0 #cbd7ff;
+		min-width: 0;
+		padding: 0.72rem;
 	}
 
-	.project-preview > p,
-	.ownership span {
-		color: var(--color-muted-foreground);
-		font-family: 'IBM Plex Mono', monospace;
-		font-size: 0.64rem;
-		letter-spacing: 0.06em;
-		margin: 0;
-		text-transform: uppercase;
-	}
-
-	.tree {
-		display: grid;
-		font-family: 'IBM Plex Mono', monospace;
-		font-size: 0.72rem;
-		gap: 0.35rem;
-		grid-template-columns: minmax(7.5rem, auto) minmax(0, 1fr);
-		margin-top: 0.8rem;
-	}
-
-	.tree > span {
-		grid-column: 1 / -1;
-	}
-
-	.tree strong {
+	.node > span {
 		color: var(--color-primary);
-		font-weight: 600;
+		display: block;
 	}
 
-	.tree small {
-		color: var(--color-muted-foreground);
+	.node strong {
+		display: block;
+		font-family: 'IBM Plex Sans Condensed', sans-serif;
+		font-size: 0.96rem;
+		margin-top: 0.22rem;
 		overflow-wrap: anywhere;
 	}
 
-	.ownership {
-		align-items: center;
-		border-top: 1px solid var(--color-border);
-		display: flex;
-		justify-content: space-between;
-		margin-top: 0.85rem;
-		padding-top: 0.75rem;
+	.node code,
+	.node small {
+		color: var(--color-muted-foreground);
+		display: block;
+		font-family: 'IBM Plex Mono', monospace;
+		font-size: 0.64rem;
+		line-height: 1.4;
+		margin-top: 0.35rem;
+		overflow-wrap: anywhere;
 	}
 
-	.ownership strong {
+	.route-node {
+		margin: 0 auto;
+		max-width: 25rem;
+	}
+
+	.connector {
+		display: none;
+	}
+
+	.boundary-grid {
+		display: grid;
+		gap: 0.7rem;
+		margin-top: 0.7rem;
+	}
+
+	.shared-node {
+		border-width: 2px;
+	}
+
+	.dependency-rule {
+		align-items: center;
+		background: var(--color-card);
+		border: 1px solid var(--color-primary);
+		display: flex;
+		gap: 0.45rem;
+		justify-content: center;
+		margin-top: 0.7rem;
+		min-height: 2.75rem;
+		padding: 0.55rem;
+	}
+
+	.dependency-rule code {
+		font-family: 'IBM Plex Mono', monospace;
+		font-size: 0.67rem;
+	}
+
+	.dependency-rule b {
 		color: var(--color-primary);
-		font-size: 0.82rem;
+	}
+
+	.output-modules {
+		display: grid;
+		margin-top: 0.7rem;
+	}
+
+	.output-modules > span {
+		align-items: center;
+		background: var(--color-card);
+		border: 1px solid var(--color-border-strong);
+		display: flex;
+		font-family: 'IBM Plex Mono', monospace;
+		font-size: 0.63rem;
+		justify-content: space-between;
+		margin-bottom: -1px;
+		min-height: 2.4rem;
+		padding: 0.45rem 0.55rem;
+	}
+
+	.output-modules b {
+		font-weight: 500;
+	}
+
+	.output-modules small {
+		color: var(--color-primary);
+		text-transform: uppercase;
 	}
 
 	.warnings {
 		background: var(--color-warning-soft);
 		border-left: 3px solid var(--color-warning);
-		font-size: 0.82rem;
-		line-height: 1.4;
-		margin-top: 1rem;
-		padding: 0.75rem 0.85rem;
+		font-size: 0.77rem;
+		line-height: 1.42;
+		margin-top: 0.8rem;
+		padding: 0.7rem 0.8rem;
 	}
 
 	.warnings ul {
 		margin: 0.35rem 0 0;
-		padding-left: 1.1rem;
+		padding-left: 1rem;
 	}
 
 	.warnings p {
-		margin: 0.25rem 0 0;
+		margin: 0.2rem 0 0;
 	}
 
 	.error {
-		background: color-mix(in srgb, var(--color-destructive), white 90%);
+		background: #fbeaed;
 		border-color: var(--color-destructive);
 	}
 
-	.previews {
+	.launch {
+		align-items: stretch;
+		background: var(--color-accent);
+		color: white;
 		display: grid;
-		gap: 0.75rem;
-		margin-top: 1rem;
+		margin-top: 0.8rem;
+	}
+
+	.launch > div {
+		min-width: 0;
+		padding: 0.72rem 0.8rem;
+	}
+
+	.launch span {
+		display: block;
+		opacity: 0.78;
+	}
+
+	.launch code {
+		display: block;
+		font-family: 'IBM Plex Mono', monospace;
+		font-size: 0.69rem;
+		line-height: 1.5;
+		margin-top: 0.3rem;
+		overflow-wrap: anywhere;
+		white-space: pre-wrap;
+	}
+
+	.launch button {
+		background: #d93600;
+		border: 0;
+		border-top: 1px solid rgba(255, 255, 255, 0.45);
+		color: white;
+		font-size: 0.78rem;
+		font-weight: 600;
+		min-height: 2.75rem;
+		padding: 0 0.9rem;
+	}
+
+	.launch button:hover:not(:disabled) {
+		background: var(--color-foreground);
+	}
+
+	.launch button:disabled {
+		opacity: 0.65;
+	}
+
+	.config-source {
+		border: 1px solid var(--color-border);
+		margin-top: 0.8rem;
+	}
+
+	.config-source summary {
+		align-items: center;
+		background: var(--color-code);
+		cursor: pointer;
+		display: flex;
+		font-family: 'IBM Plex Mono', monospace;
+		font-size: 0.66rem;
+		font-weight: 500;
+		min-height: 2.75rem;
+		padding: 0 0.75rem;
+	}
+
+	.config-source :global(.panel) {
+		border: 0;
+		border-top: 1px solid var(--color-border);
 	}
 
 	.sr-only {
@@ -480,15 +680,81 @@
 	@media (min-width: 38rem) {
 		.project-field {
 			align-items: center;
-			gap: 1.25rem;
-			grid-template-columns: minmax(9.5rem, 0.9fr) minmax(13rem, 1.1fr);
+			gap: 1rem;
+			grid-template-columns: minmax(9rem, 0.85fr) minmax(13rem, 1.15fr);
+		}
+
+		.boundary-grid {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+
+		.connector {
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+			height: 1.5rem;
+			margin: 0 auto;
+			max-width: 75%;
+			position: relative;
+		}
+
+		.connector::before {
+			background: var(--color-primary);
+			content: '';
+			height: 1px;
+			left: 16.66%;
+			position: absolute;
+			top: 0.75rem;
+			width: 66.66%;
+		}
+
+		.connector::after {
+			background: var(--color-primary);
+			content: '';
+			height: 0.75rem;
+			left: 50%;
+			position: absolute;
+			top: 0;
+			width: 1px;
+		}
+
+		.connector i {
+			border-left: 1px solid var(--color-primary);
+			height: 0.75rem;
+			justify-self: center;
+			margin-top: 0.75rem;
+		}
+
+		.output-modules {
+			grid-template-columns: repeat(3, 1fr);
+		}
+
+		.output-modules > span {
+			align-items: flex-start;
+			flex-direction: column;
+			gap: 0.25rem;
+			margin-bottom: 0;
+			margin-right: -1px;
+		}
+
+		.launch {
+			grid-template-columns: minmax(0, 1fr) auto;
+		}
+
+		.launch button {
+			border-left: 1px solid rgba(255, 255, 255, 0.45);
+			border-top: 0;
 		}
 	}
 
 	@media (min-width: 70rem) {
 		.workbench {
 			align-items: start;
-			grid-template-columns: minmax(0, 1.08fr) minmax(24rem, 0.92fr);
+			grid-template-areas: 'controls output';
+			grid-template-columns: minmax(25rem, 0.76fr) minmax(35rem, 1.24fr);
+		}
+
+		.controls {
+			border-right: 1px solid var(--color-border-strong);
 		}
 
 		.output {
@@ -498,18 +764,13 @@
 	}
 
 	@media (max-width: 39.99rem) {
-		.configurator {
-			box-shadow: 5px 5px 0 var(--color-primary-soft);
-			padding: 0.8rem;
-		}
-
 		.configurator-head {
-			align-items: flex-start;
 			flex-direction: column;
 		}
 
 		.registry-note {
-			align-self: flex-start;
+			min-height: auto;
+			white-space: normal;
 		}
 
 		.output-head {
@@ -517,12 +778,9 @@
 			flex-direction: column;
 		}
 
-		.tree {
-			grid-template-columns: 1fr;
-		}
-
-		.tree > span {
-			grid-column: auto;
+		.resolution {
+			max-width: none;
+			text-align: left;
 		}
 	}
 </style>

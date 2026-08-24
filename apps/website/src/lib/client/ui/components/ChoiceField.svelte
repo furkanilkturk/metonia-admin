@@ -48,13 +48,12 @@
 	.field {
 		border-top: 1px solid var(--color-border);
 		display: grid;
-		gap: 0.65rem;
-		padding: 1rem 0;
+		gap: 0.55rem;
+		padding: 0.8rem 0;
 	}
 
 	.field:first-child {
 		border-top: 0;
-		padding-top: 0;
 	}
 
 	.field-copy {
@@ -63,36 +62,36 @@
 
 	label {
 		display: block;
-		font-family: 'Space Grotesk', sans-serif;
+		font-family: 'IBM Plex Sans Condensed', sans-serif;
 		font-size: 0.92rem;
 		font-weight: 600;
-		letter-spacing: -0.015em;
 	}
 
 	p {
 		color: var(--color-muted-foreground);
-		font-size: 0.8rem;
-		line-height: 1.4;
-		margin: 0.22rem 0 0;
+		font-size: 0.75rem;
+		line-height: 1.38;
+		margin: 0.16rem 0 0;
 	}
 
 	.control {
 		align-items: center;
 		display: grid;
-		gap: 0.4rem;
+		gap: 0.45rem;
 		grid-template-columns: minmax(0, 1fr) auto;
 		min-width: 0;
 	}
 
 	select {
-		appearance: auto;
-		background: var(--color-raised);
+		background: var(--color-card);
 		border: 1px solid var(--color-border-strong);
-		border-radius: 0.25rem;
+		border-radius: 0;
 		color: var(--color-foreground);
+		font-family: 'IBM Plex Mono', monospace;
+		font-size: 0.74rem;
 		min-height: 2.75rem;
 		min-width: 0;
-		padding: 0 0.65rem;
+		padding: 0 0.55rem;
 		width: 100%;
 	}
 
@@ -100,11 +99,11 @@
 		border-color: var(--color-primary);
 	}
 
-	@media (min-width: 38rem) {
+	@media (min-width: 38rem) and (max-width: 69.99rem) {
 		.field {
 			align-items: center;
-			gap: 1.25rem;
-			grid-template-columns: minmax(9.5rem, 0.9fr) minmax(13rem, 1.1fr);
+			gap: 1rem;
+			grid-template-columns: minmax(9rem, 0.85fr) minmax(13rem, 1.15fr);
 		}
 	}
 </style>

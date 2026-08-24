@@ -7,7 +7,7 @@
 	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",
 	"bin": {
-		"create-metonia-admin": "./dist/create-metonia-admin.js"
+		"create-metonia-admin": "dist/create-metonia-admin.js"
 	},
 	"exports": {
 		".": {

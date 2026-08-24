@@ -18,41 +18,40 @@
 		align-items: center;
 		background: var(--color-muted);
 		border: 1px solid var(--color-border);
-		border-radius: 999px;
+		border-radius: 2px;
 		color: var(--color-muted-foreground);
 		display: inline-flex;
 		font-family: 'IBM Plex Mono', monospace;
-		font-size: 0.65rem;
+		font-size: 0.59rem;
 		font-weight: 600;
-		gap: 0.35rem;
+		gap: 0.32rem;
 		letter-spacing: 0.035em;
 		line-height: 1;
-		padding: 0.35rem 0.5rem;
+		padding: 0.3rem 0.4rem;
 		white-space: nowrap;
 	}
 
 	.marker {
 		background: currentColor;
-		border-radius: 50%;
-		height: 0.38rem;
-		width: 0.38rem;
+		height: 0.36rem;
+		width: 0.36rem;
 	}
 
 	.stable {
 		background: var(--color-primary-soft);
-		border-color: color-mix(in srgb, var(--color-primary), white 52%);
+		border-color: #9eb2f5;
 		color: var(--color-primary);
 	}
 
 	.experimental {
 		background: var(--color-warning-soft);
-		border-color: color-mix(in srgb, var(--color-warning), white 58%);
+		border-color: #d9b56c;
 		color: var(--color-warning);
 	}
 
 	.blocked {
-		background: color-mix(in srgb, var(--color-destructive), white 90%);
-		border-color: color-mix(in srgb, var(--color-destructive), white 65%);
+		background: #fbeaed;
+		border-color: #dfa6af;
 		color: var(--color-destructive);
 	}
 </style>

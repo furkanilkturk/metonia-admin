@@ -1,41 +1,32 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Source+Sans+3:opsz,wght@8..60,400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
 
 :root {
-	font-family: 'Source Sans 3', 'Segoe UI', sans-serif;
-	color: #17231f;
-	background: #f2f4ef;
+	font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif;
+	color: #17232b;
+	background: #eef2f4;
 	font-synthesis: none;
 	text-rendering: optimizeLegibility;
-	--color-background: #f2f4ef;
-	--color-card: #fbfcfa;
+	--color-background: #eef2f4;
+	--color-card: #ffffff;
 	--color-raised: #ffffff;
-	--color-foreground: #17231f;
-	--color-muted-foreground: #53615b;
-	--color-muted: #e7ebe5;
-	--color-border: #c8d0ca;
-	--color-border-strong: #9ca9a1;
-	--color-primary: #08756d;
-	--color-primary-soft: #dcece8;
+	--color-foreground: #17232b;
+	--color-muted-foreground: #52616b;
+	--color-muted: #e4e9ec;
+	--color-border: #c7d0d5;
+	--color-border-strong: #8d9ba4;
+	--color-primary: #2458e6;
+	--color-primary-soft: #e6ecff;
 	--color-on-primary: #ffffff;
-	--color-accent: #c84d23;
-	--color-accent-soft: #f4e3da;
+	--color-accent: #ff3e00;
+	--color-accent-soft: #fff0ea;
 	--color-on-accent: #ffffff;
-	--color-warning: #875600;
-	--color-warning-soft: #f5ead2;
-	--color-destructive: #a92a33;
-	--color-ring: #08756d;
-	--color-code: #edf1ec;
-	--space-1: 0.25rem;
-	--space-2: 0.5rem;
-	--space-3: 0.75rem;
-	--space-4: 1rem;
-	--space-6: 1.5rem;
-	--space-8: 2rem;
-	--space-12: 3rem;
-	--space-16: 4rem;
-	--space-24: 6rem;
-	--page-gutter: clamp(1rem, 4vw, 3.5rem);
-	--page-width: 88rem;
+	--color-warning: #8a5300;
+	--color-warning-soft: #fff3d8;
+	--color-destructive: #b42332;
+	--color-ring: #2458e6;
+	--color-code: #f5f7f8;
+	--page-gutter: clamp(1rem, 3.5vw, 3rem);
+	--page-width: 90rem;
 }
 
 * {
@@ -44,16 +35,14 @@
 
 html {
 	scroll-behavior: smooth;
-	scroll-padding-top: 6rem;
+	scroll-padding-top: 5rem;
 }
 
 body {
 	min-width: 320px;
 	min-height: 100dvh;
 	margin: 0;
-	background:
-		linear-gradient(var(--color-border) 1px, transparent 1px) 0 0 / 100% 5rem,
-		var(--color-background);
+	background: var(--color-background);
 }
 
 button,
@@ -80,18 +69,12 @@ a {
 }
 
 :focus-visible {
-	outline: 3px solid color-mix(in oklab, var(--color-ring), transparent 18%);
+	outline: 3px solid var(--color-ring);
 	outline-offset: 3px;
 }
 
 ::selection {
 	background: var(--color-primary-soft);
-}
-
-@media (max-width: 47.99rem) {
-	body {
-		background-size: 100% 4rem;
-	}
 }
 
 @media (prefers-reduced-motion: reduce) {
