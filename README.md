@@ -6,7 +6,13 @@ The MVP includes a portable `create-metonia-admin` Node CLI, a transactional rec
 
 ## Quick start
 
-Build and run the local CLI:
+Generate a project from the public npm release:
+
+```bash
+npx create-metonia-admin@latest acme-admin --yes
+```
+
+For local CLI development inside this Bun-first monorepo:
 
 ```bash
 bun install
@@ -14,10 +20,10 @@ bun run --cwd packages/cli build
 node packages/cli/dist/create-metonia-admin.js acme-admin --yes
 ```
 
-The interactive form asks only relevant questions. The same configuration can be automated:
+The interactive form asks only relevant questions. The same configuration can be automated from the registry:
 
 ```bash
-node packages/cli/dist/create-metonia-admin.js acme-admin \
+npx create-metonia-admin@latest acme-admin \
   --package-manager bun \
   --ui shadcn-svelte \
   --theme zinc \
@@ -33,7 +39,7 @@ node packages/cli/dist/create-metonia-admin.js acme-admin \
   --no-git
 ```
 
-Use `--json` for a single versioned machine-readable result. Invalid combinations fail before a destination is written. Once published, the bundled Node artifact is designed for `npx`, `pnpm dlx`, `yarn dlx`, and `bunx` invocation; public-registry publication itself remains a release task.
+Use `--json` for a single versioned machine-readable result. Invalid combinations fail before a destination is written. `create-metonia-admin@0.1.0` is published on npm with the `latest` tag; a clean external `npx` invocation passed `--help` and generated a real default project from the public registry.
 
 ## What is generated
 

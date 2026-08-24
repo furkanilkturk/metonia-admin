@@ -26,6 +26,8 @@ The exact generated versions are also pinned by the generator. Deno 2.9.5 is rep
 
 npm 12.0.2 packed the CLI into a 1,458,188-byte tarball (5,232,694 bytes unpacked, 190 entries). Installing that tarball produced zero runtime dependencies because the Node-targeted CLI contains its registry and generator implementation plus required runtime assets. Under exact Node 24.19.0, the installed Windows bin shim passed `--help` and generated a real project in a path containing spaces with `--json --no-install --no-git`; stdout contained exactly one JSON line and stderr was empty. Bundle scans found no `Bun.*` runtime use and no external `@metonia-admin/*` imports. POSIX executable-mode verification remains a multi-OS publication gate because Windows reports the packed bin as mode 0644 even though the installed Windows shim works.
 
+`create-metonia-admin@0.1.0` was then published to the public npm registry with `latest` pointing to `0.1.0` and the expected `create-metonia-admin -> dist/create-metonia-admin.js` binary mapping. From a new directory outside the monorepo and an empty npm cache, `npx --yes create-metonia-admin@0.1.0 --help` passed. A second public-registry `npx` invocation generated the default project with `--yes --no-install --no-git --json`; it exited successfully, emitted exactly one valid JSON line with empty stderr, created `package.json`, `metonia-admin.config.ts`, and `AGENTS.md`, and did not create `.git`. That exact generated output then passed `bun install`, Svelte check with 0 errors and 0 warnings, its Vitest suite, and the adapter-node production build.
+
 ### Default Standard project
 
 The bundled Node CLI generated a fresh default application into a path containing spaces with dependency installation enabled. The output included Dashboard, Settings, full Users, zinc shadcn-svelte UI, Zod, Drizzle, generic PostgreSQL/`pg`, configuration-aware documentation, and no Metonia runtime dependency.
@@ -84,7 +86,7 @@ The public website passed browser review at 375, 768, 1024, and 1440 pixel viewp
 - Only zinc has a verified checked-in shadcn-svelte preset snapshot. Other shadcn base colors remain visible but unavailable.
 - Remote Functions remain upstream Experimental and implement a validated query proof, not Users CRUD parity.
 - No package-manager or Docker result is promoted to universal Stable support from a single host environment.
-- The unscoped package name has not been published; invocation compatibility is proven against the packed portable Node artifact, not a public registry release.
+- Public-registry invocation is verified on Windows through npm/npx. POSIX executable metadata and repeatable multi-OS registry invocation remain release-hardening work rather than claims of universal support.
 
 ## Reproduction commands
 
