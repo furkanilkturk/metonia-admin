@@ -1,0 +1,25 @@
+{
+	"name": "@metonia-admin/registry",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		}
+	},
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"dev": "bun --watch src/index.ts",
+		"check": "tsc --project tsconfig.json && tsc --project tsconfig.test.json",
+		"lint": "eslint src tests --max-warnings=0",
+		"format:check": "prettier --check src tests package.json tsconfig.json tsconfig.build.json tsconfig.test.json",
+		"test": "bun test tests",
+		"build": "tsc --project tsconfig.build.json"
+	}
+}

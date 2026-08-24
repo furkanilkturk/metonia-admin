@@ -1,0 +1,30 @@
+{
+	"name": "metonia-admin",
+	"version": "0.0.0",
+	"private": true,
+	"license": "MIT",
+	"type": "module",
+	"packageManager": "bun@1.3.14",
+	"workspaces": [
+		"apps/*",
+		"packages/*"
+	],
+	"scripts": {
+		"dev": "bun run --filter '*' dev",
+		"check": "bun run --filter '*' check",
+		"lint": "bun run --filter '*' lint",
+		"format:check": "bun run --filter '*' format:check",
+		"test": "bun run --filter '*' test",
+		"build": "bun run --filter '*' build",
+		"test:generator": "bun run --cwd packages/generator build && bun run --cwd packages/cli build && bun test packages/generator/src/recipe-plan.test.ts packages/cli/src/cli.process.test.ts",
+		"test:integration": "bun run --cwd packages/generator build && bun run --cwd packages/cli build && bun test tests/integration"
+	},
+	"devDependencies": {
+		"@types/bun": "1.4.0",
+		"@eslint/js": "9.39.1",
+		"eslint": "9.39.1",
+		"prettier": "3.8.2",
+		"typescript": "6.0.3",
+		"typescript-eslint": "8.68.0"
+	}
+}

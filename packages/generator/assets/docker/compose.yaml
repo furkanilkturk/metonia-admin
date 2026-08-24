@@ -1,0 +1,47 @@
+services:
+  app:
+    build:
+      context: .
+      target: runtime
+    init: true
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3000
+      # Set ORIGIN to the browser-visible public origin when deploying behind a proxy.
+      # Do not blindly trust forwarded host/proto headers from untrusted clients.
+      ORIGIN: ${ORIGIN:-http://localhost:3000}
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-metonia}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env before starting Compose.}@postgres:5432/${POSTGRES_DB:-metonia_development}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+        restart: true
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    stop_grace_period: 30s
+
+  # A disposable local-development convenience, not a hosted deployment target.
+  postgres:
+    image: postgres:17.11-bookworm
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-metonia_development}
+      POSTGRES_USER: ${POSTGRES_USER:-metonia}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env before starting Compose.}
+    volumes:
+      - metonia-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    stop_grace_period: 30s
+
+volumes:
+  metonia-postgres-data:

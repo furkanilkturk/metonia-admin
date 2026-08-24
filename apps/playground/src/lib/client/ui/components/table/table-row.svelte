@@ -1,0 +1,25 @@
+<script lang="ts">
+	import { cn, type WithElementRef } from "$lib/client/utils/index.js";
+	import type { HTMLAttributes } from "svelte/elements";
+
+	let {
+		ref = $bindable(null),
+		class: className,
+		children,
+		...restProps
+	}: WithElementRef<HTMLAttributes<HTMLTableRowElement>> = $props();
+</script>
+
+<tr
+	{@attach (element) => {
+		ref = element;
+		return () => {
+			if (ref === element) ref = null;
+		};
+	}}
+	data-slot="table-row"
+	class={cn("border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted", className)}
+	{...restProps}
+>
+	{@render children?.()}
+</tr>

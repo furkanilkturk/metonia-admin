@@ -1,0 +1,15 @@
+.env
+.env.*
+!.env.example
+.git
+.github
+.vscode
+node_modules
+build
+.svelte-kit
+coverage
+*.log
+Dockerfile*
+compose*.yaml
+docker-compose*.yml
+docker-compose*.yaml

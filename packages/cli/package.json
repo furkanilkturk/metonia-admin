@@ -1,0 +1,59 @@
+{
+	"name": "create-metonia-admin",
+	"version": "0.1.0",
+	"description": "Generate native, agent-friendly SvelteKit admin applications.",
+	"license": "MIT",
+	"type": "module",
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"bin": {
+		"create-metonia-admin": "./dist/create-metonia-admin.js"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		}
+	},
+	"files": [
+		"dist"
+	],
+	"keywords": [
+		"svelte",
+		"sveltekit",
+		"admin",
+		"generator",
+		"cli",
+		"shadcn-svelte",
+		"drizzle",
+		"postgresql"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/furkanilkturk/metonia-admin.git",
+		"directory": "packages/cli"
+	},
+	"homepage": "https://github.com/furkanilkturk/metonia-admin#readme",
+	"bugs": {
+		"url": "https://github.com/furkanilkturk/metonia-admin/issues"
+	},
+	"scripts": {
+		"dev": "bun --watch src/index.ts",
+		"check": "tsc --project tsconfig.json",
+		"lint": "eslint src --max-warnings=0",
+		"format:check": "prettier --check src scripts package.json tsconfig.json tsconfig.build.json",
+		"test": "bun test src",
+		"build": "bun build ./src/index.ts --outfile ./dist/index.js --target node --format esm && bun build ./src/bin.ts --bundle --outfile ./dist/create-metonia-admin.js --target node --format esm --banner '#!/usr/bin/env node' && tsc --project tsconfig.build.json && node ./scripts/copy-runtime-assets.mjs"
+	},
+	"devDependencies": {
+		"@clack/prompts": "1.7.0",
+		"@metonia-admin/generator": "workspace:*",
+		"@metonia-admin/registry": "workspace:*"
+	},
+	"engines": {
+		"node": ">=22"
+	},
+	"publishConfig": {
+		"access": "public"
+	}
+}

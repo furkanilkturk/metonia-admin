@@ -1,0 +1,25 @@
+<script lang="ts">
+	import { cn, type WithElementRef } from "$lib/client/utils/index.js";
+	import type { HTMLAttributes } from "svelte/elements";
+
+	let {
+		ref = $bindable(null),
+		class: className,
+		children,
+		...restProps
+	}: WithElementRef<HTMLAttributes<HTMLElement>> = $props();
+</script>
+
+<caption
+	{@attach (element) => {
+		ref = element;
+		return () => {
+			if (ref === element) ref = null;
+		};
+	}}
+	data-slot="table-caption"
+	class={cn("mt-4 text-sm text-muted-foreground", className)}
+	{...restProps}
+>
+	{@render children?.()}
+</caption>
