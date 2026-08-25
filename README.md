@@ -44,7 +44,7 @@ npx create-metonia-admin@latest acme-admin \
   --no-git
 ```
 
-Use `--json` for a single versioned machine-readable result. Invalid combinations fail before a destination is written. `create-metonia-admin@0.1.0` is published on npm with the `latest` tag; a clean external `npx` invocation passed `--help` and generated a real default project from the public registry.
+Use `--json` for a single versioned machine-readable result. Invalid combinations fail before a destination is written. `create-metonia-admin@0.1.1` is published on npm with the `latest` tag; clean external `npx`, `npm create`, and `bunx` invocations passed, including a live no-argument wizard run and a real non-default-theme generation from the public registry.
 
 ## What is generated
 
