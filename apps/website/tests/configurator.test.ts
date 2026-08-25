@@ -17,12 +17,19 @@ test('website exposes themes only from the selected adapter', () => {
 	);
 });
 
-test('website keeps non-zinc themes visible but unavailable from the registry projection', () => {
+test('website exposes all seven verified shadcn-svelte base colors as selectable', () => {
 	const themes = choicesFor('ui.theme', initialDraft());
-	expect(themes.find((theme) => theme.id === 'zinc')?.selectable).toBeTrue();
-	expect(
-		themes.filter((theme) => theme.id !== 'zinc').every((theme) => !theme.selectable)
-	).toBeTrue();
+	expect(themes.map((theme) => theme.id)).toEqual([
+		'neutral',
+		'stone',
+		'zinc',
+		'mauve',
+		'olive',
+		'mist',
+		'taupe'
+	]);
+	expect(themes.every((theme) => theme.selectable)).toBeTrue();
+	expect(themes.every((theme) => theme.support.integration === 'experimental')).toBeTrue();
 });
 
 test('unavailable Fluid UI is visible but not selectable', () => {

@@ -82,21 +82,9 @@ function shadcnTheme(id: ThemeId): ThemeDefinition {
 		label: `${id[0].toUpperCase()}${id.slice(1)}`,
 		description: `Use the shadcn-svelte ${id} base color.`,
 		baseColor: id,
-		support:
-			id === 'zinc'
-				? pendingIntegration(
-						'The checked-in shadcn-svelte zinc preset passed deterministic generation, Svelte autofix, responsive visual review, and complete generated-project check/test/build; repeatable multi-OS release evidence remains pending.'
-					)
-				: {
-						upstream: 'stable',
-						integration: 'unknown',
-						blocker: {
-							code: `shadcn-${id}-snapshot-missing`,
-							summary: `The shadcn-svelte ${id} preset is pinned but not generated yet.`,
-							details:
-								'An exact checked-in theme snapshot must pass deterministic generation, accessibility, install, check, test, and build gates before this theme can be selected.'
-						}
-					},
+		support: pendingIntegration(
+			`The checked-in shadcn-svelte ${id} Nova base-color snapshot passed deterministic generation on the primary Windows stack; repeatable multi-OS release evidence remains pending.`
+		),
 		docs: [{ label: 'shadcn-svelte theming', url: 'https://www.shadcn-svelte.com/docs/theming' }]
 	};
 }

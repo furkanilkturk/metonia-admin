@@ -4,7 +4,7 @@ export interface ShadcnSvelteThemePreset {
 	readonly baseColor: ThemeId;
 	readonly id: ThemeId;
 	readonly presetCode: string;
-	readonly snapshot: 'zinc' | null;
+	readonly snapshot: ThemeId;
 }
 
 /** Values decoded from the durable 1.5.0 preset payload shared by all seven theme codes. */
@@ -28,13 +28,13 @@ export const shadcnSvelteThemePresets = Object.freeze({
 		baseColor: 'neutral',
 		id: 'neutral',
 		presetCode: 'b6WwhW0Vfs',
-		snapshot: null
+		snapshot: 'neutral'
 	}),
 	stone: Object.freeze({
 		baseColor: 'stone',
 		id: 'stone',
 		presetCode: 'b6WwhoSR84',
-		snapshot: null
+		snapshot: 'stone'
 	}),
 	zinc: Object.freeze({
 		baseColor: 'zinc',
@@ -46,25 +46,25 @@ export const shadcnSvelteThemePresets = Object.freeze({
 		baseColor: 'mauve',
 		id: 'mauve',
 		presetCode: 'b6WwiUBTFY',
-		snapshot: null
+		snapshot: 'mauve'
 	}),
 	olive: Object.freeze({
 		baseColor: 'olive',
 		id: 'olive',
 		presetCode: 'b6WwimdOhk',
-		snapshot: null
+		snapshot: 'olive'
 	}),
 	mist: Object.freeze({
 		baseColor: 'mist',
 		id: 'mist',
 		presetCode: 'b6Wwj55K9w',
-		snapshot: null
+		snapshot: 'mist'
 	}),
 	taupe: Object.freeze({
 		baseColor: 'taupe',
 		id: 'taupe',
 		presetCode: 'b6WwjNXFc8',
-		snapshot: null
+		snapshot: 'taupe'
 	})
 } satisfies Readonly<Record<ThemeId, ShadcnSvelteThemePreset>>);
 

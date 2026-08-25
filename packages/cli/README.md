@@ -5,16 +5,25 @@ Generate a native Svelte 5 + SvelteKit admin application with predictable client
 ## Create a project
 
 ```bash
-npx create-metonia-admin@latest acme-admin
+npx create-metonia-admin@latest
 ```
 
-The same CLI can be launched with:
+With no destination argument, the wizard asks for a project name and suggests
+`./<project-name>` relative to the terminal's current directory. Enter `./` as the
+destination to generate into the current directory, which must be empty, or type
+another relative or absolute path.
+
+The same CLI can be launched with any of these package-runner forms:
 
 ```bash
-bunx create-metonia-admin@latest acme-admin
-pnpm dlx create-metonia-admin@latest acme-admin
-yarn dlx create-metonia-admin@latest acme-admin
+npm create metonia-admin@latest
+bunx create-metonia-admin@latest
+pnpm dlx create-metonia-admin@latest
+yarn dlx create-metonia-admin@latest
 ```
+
+The `npm i create-metonia-admin` command shown automatically by npm installs the
+package; use one of the runner commands above to create a project.
 
 For deterministic automation:
 
@@ -56,6 +65,6 @@ The dependency rules are `client -> shared <- server` and `pages -> views -> com
 
 ## Current release status
 
-Version 0.1 is an early public test release. Bun, npm, pnpm, and Yarn generated-project paths have Windows integration evidence but remain Experimental pending repeatable multi-OS verification. Deno and Fluid UI are visible but unavailable. Only the shadcn-svelte zinc preset is currently selectable. Authentication and authorization are deliberately deferred; add access control before production use.
+Version 0.1 is an early public test release. Bun, npm, pnpm, and Yarn generated-project paths have Windows integration evidence but remain Experimental pending repeatable multi-OS verification. Deno and Fluid UI are visible but unavailable. The shadcn-svelte adapter offers the pinned Neutral, Stone, Zinc, Mauve, Olive, Mist, and Taupe Nova base colors. Authentication and authorization are deliberately deferred; add access control before production use.
 
 Metonia Admin is licensed under MIT.

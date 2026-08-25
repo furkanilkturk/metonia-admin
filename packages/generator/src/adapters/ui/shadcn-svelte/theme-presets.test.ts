@@ -40,5 +40,18 @@ describe('shadcn-svelte 1.5.0 preset mapping', () => {
 			presetCode: 'b6Wwi6uMaG',
 			snapshot: 'zinc'
 		});
+		expect(
+			Object.fromEntries(
+				Object.entries(shadcnSvelteThemePresets).map(([theme, preset]) => [theme, preset.snapshot])
+			)
+		).toEqual({
+			neutral: 'neutral',
+			stone: 'stone',
+			zinc: 'zinc',
+			mauve: 'mauve',
+			olive: 'olive',
+			mist: 'mist',
+			taupe: 'taupe'
+		});
 	});
 });

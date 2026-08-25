@@ -78,12 +78,6 @@ export function createRecipePlan(config: ResolvedConfig): RecipePlan {
 			`The executable recipe plan does not implement the "${config.ui.adapter}" UI adapter.`
 		);
 	}
-	if (config.ui.theme !== 'zinc') {
-		throw new RecipePlanError(
-			'UI_THEME_NOT_IMPLEMENTED',
-			`The shadcn-svelte "${config.ui.theme}" theme is pinned but has no verified checked-in snapshot.`
-		);
-	}
 	if (config.validation !== 'zod') {
 		throw new RecipePlanError(
 			'VALIDATION_NOT_IMPLEMENTED',

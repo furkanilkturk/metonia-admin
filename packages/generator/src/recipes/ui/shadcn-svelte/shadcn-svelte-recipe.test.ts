@@ -6,7 +6,7 @@ import { lstat, mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { basename, join, relative, resolve } from 'node:path';
 
-import { resolveConfigOrThrow } from '@metonia-admin/registry';
+import { resolveConfigOrThrow, type ThemeId } from '@metonia-admin/registry';
 
 import { generateProject } from '../../../core/index.js';
 import { createAdminCoreRecipe } from '../../admin-core/index.js';
@@ -115,6 +115,47 @@ describe('shadcn-svelte admin workbench recipes', () => {
 		).not.toContain('RecipeTrace');
 	});
 
+	test('generates every pinned Nova base-color snapshot', async () => {
+		const root = await createTestRoot();
+		const themes = [
+			'neutral',
+			'stone',
+			'zinc',
+			'mauve',
+			'olive',
+			'mist',
+			'taupe'
+		] as const satisfies readonly ThemeId[];
+		const foregrounds: Readonly<Record<ThemeId, string>> = {
+			neutral: 'oklch(0.145 0 0)',
+			stone: 'oklch(0.147 0.004 49.25)',
+			zinc: 'oklch(0.141 0.005 285.823)',
+			mauve: 'oklch(0.145 0.008 326)',
+			olive: 'oklch(0.153 0.006 107.1)',
+			mist: 'oklch(0.148 0.004 228.8)',
+			taupe: 'oklch(0.147 0.004 49.3)'
+		};
+		const generatedStyles = new Set<string>();
+
+		for (const theme of themes) {
+			const destination = join(root, theme);
+			const result = await generateWorkbench(destination, theme);
+			if (!result.ok) throw new Error(`${theme}: ${JSON.stringify(result.error)}`);
+			expect(result.ok).toBeTrue();
+
+			const components = JSON.parse(await readFile(join(destination, 'components.json'), 'utf8'));
+			expect(components.tailwind.baseColor).toBe(theme);
+
+			const css = await readFile(join(destination, 'src/routes/layout.css'), 'utf8');
+			expect(css).toContain(`/* shadcn-svelte Nova base color: ${theme} */`);
+			expect(css).toContain(`--foreground: ${foregrounds[theme]};`);
+			expect(css).not.toContain('__LIGHT_THEME_VARIABLES__');
+			generatedStyles.add(css);
+		}
+
+		expect(generatedStyles.size).toBe(themes.length);
+	}, 60_000);
+
 	generatedIntegrationTest(
 		'installs, checks, tests, and builds the fresh Bun workbench',
 		async () => {
@@ -140,11 +181,11 @@ describe('shadcn-svelte admin workbench recipes', () => {
 	);
 });
 
-function generateWorkbench(destination: string) {
+function generateWorkbench(destination: string, theme: ThemeId = 'zinc') {
 	const config = resolveConfigOrThrow({
 		projectName: 'metonia-workbench',
 		packageManager: 'bun',
-		ui: { adapter: 'shadcn-svelte', theme: 'zinc' },
+		ui: { adapter: 'shadcn-svelte', theme },
 		dataPattern: 'sveltekit-standard',
 		docker: false,
 		resources: { users: false }

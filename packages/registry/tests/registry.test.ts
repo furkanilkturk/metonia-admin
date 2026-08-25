@@ -94,7 +94,7 @@ describe('capability registry', () => {
 				projectName: 'admin',
 				ui: { adapter: 'shadcn-svelte' }
 			}).map(({ id }) => id)
-		).toEqual(['zinc']);
+		).toEqual(['neutral', 'stone', 'zinc', 'mauve', 'olive', 'mist', 'taupe']);
 		expect(
 			getConditionalChoices(
 				'ui.theme',
@@ -105,8 +105,8 @@ describe('capability registry', () => {
 		expect(
 			capabilityRegistry.uiAdapters
 				.find(({ id }) => id === 'shadcn-svelte')
-				?.themes.find(({ id }) => id === 'neutral')?.support.blocker?.code
-		).toBe('shadcn-neutral-snapshot-missing');
+				?.themes.every(({ support }) => support.integration === 'experimental')
+		).toBe(true);
 		expect(
 			getConditionalChoices('ui.theme', { projectName: 'admin', ui: { adapter: 'fluid-ui' } })
 		).toEqual([]);

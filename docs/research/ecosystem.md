@@ -198,7 +198,7 @@ Setting only `components` is insufficient: registry UI primitives use the dedica
 ### Themes, presets, and registries are different concepts
 
 - shadcn-svelte’s [theming guide](https://www.shadcn-svelte.com/docs/theming) uses CSS custom properties. The current init base-color choices are `neutral`, `stone`, `zinc`, `mauve`, `olive`, `mist`, and `taupe`; these are suitable as explicit adapter-owned theme choices after snapshot tests.
-- The current CLI can `apply <preset>` and limit an application with `--only theme` or `--only font`. Preset codes are opaque inputs, not durable Metonia theme identifiers. No authoritative, versioned, enumerable preset-catalog contract was found, so only deliberately curated and tested preset codes may enter the capability registry.
+- The current CLI can `apply <preset>` and limit an application with `--only theme` or `--only font`. Preset codes are opaque inputs, not durable Metonia theme identifiers. Metonia pins one reviewed Nova preset code for each of the seven official base colors and checks in the decoded color tokens rather than depending on a live preset response during generation.
 - The official [registry overview](https://www.shadcn-svelte.com/docs/registry) and [registry item schema](https://www.shadcn-svelte.com/docs/registry/registry-item-json) describe URL-installable items, including `registry:theme` and `registry:style`. The site explicitly labels building a custom registry experimental. Do not make Metonia’s stable adapter depend on operating its own shadcn registry until upstream removes that warning and the full path is tested.
 
 Themes belong to the shadcn adapter. Store the selected stable Metonia theme ID separately from the upstream base color or opaque preset code, resolve it through the typed registry, and fail invalid cross-adapter combinations before writing files.
@@ -360,7 +360,7 @@ Before a capability is marked stable in the registry:
 ## Unresolved blockers and follow-ups
 
 1. **Fluid identity:** exact first-party package/repository/docs/registry/theme contract is not confirmed. The adapter stays unavailable.
-2. **shadcn theme catalog:** base colors are enumerable, but durable Metonia theme IDs and any accepted preset codes still need a curated, tested mapping. Custom registry infrastructure remains experimental upstream.
+2. **shadcn theme matrix:** the seven official base colors now have curated Metonia IDs, pinned Nova preset codes, and deterministic snapshots. Repeatable theme-specific visual, accessibility, and multi-OS build evidence remains pending; custom registry infrastructure remains experimental upstream.
 3. **Deno matrix:** no end-to-end evidence yet for shadcn, native/tooling install scripts, Drizzle Kit, the chosen PostgreSQL driver, adapter-node output, and Docker together.
 4. **CLI runtime matrix:** plain `bunx` follows the Node shebang; Bun-only execution requires `bunx --bun` and its own packaged-artifact tests. Nested `sv`/shadcn execution must not assume the caller’s package manager.
 5. **npm names:** `create-metonia-admin` and `metonia-admin` were absent only at the observation time. Ownership/reservation is still a release prerequisite.

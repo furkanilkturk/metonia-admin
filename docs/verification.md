@@ -18,7 +18,7 @@ The exact generated versions are also pinned by the generator. Deno 2.9.5 is rep
 ### Control plane and generator safety
 
 - Registry tests cover canonical IDs, support vocabulary, conditional theme ownership, database nesting, serialization, defaults, malformed input, experimental warnings, and incompatible Remote-Users / Docker-package-manager crossings.
-- CLI tests cover interactive/flag/`--yes` equivalence, conditional questions, non-TTY behavior, JSON-only success/failure output, cancellation, stage-preserving errors, Remote consent, and destinations containing spaces.
+- CLI tests cover interactive/flag/`--yes` equivalence, project-name and relative-destination defaults, `./` current-directory generation, concise blocking errors, conditional questions, non-TTY behavior, JSON-only success/failure output, cancellation, stage-preserving errors, Remote consent, and destinations containing spaces.
 - Generator-core tests cover traversal and symlink rejection, owned staging, ordered recipes, validation failures, command timeouts, existing destinations, finalization rollback, and cleanup.
 - A Windows-only transient-lock retry is limited to `EACCES`, `EBUSY`, and `EPERM` during publication; every destination and rollback check still runs.
 
@@ -77,13 +77,15 @@ The Bun Docker path produced a pinned multi-stage build using `oven/bun:1.4.0`, 
 
 All generated Svelte files owned by the shadcn/admin and Users workstreams passed the official Svelte autofixer and Svelte diagnostics. Desktop and mobile visual smoke covered the responsive admin shell, Dashboard, Settings, Users, dialogs/menus, and the zinc theme.
 
-The public website passed browser review at 375, 768, 1024, and 1440 pixel viewports with no horizontal overflow and no console warnings/errors. The 375-pixel pass found no non-checkbox interactive target below 44 pixels. Keyboard review verified the skip link and visible 3-pixel focus outline; the reduced-motion rule is present and the design has no ambient animation. Fluid UI and six unverified non-zinc themes remain visible but disabled. Remote + Users and npm + Docker both surfaced the registry's authoritative recovery text, recovered when corrected, and retained the valid Remote experimental warning. The configurator consumes the registry's serializable catalog and resolver rather than copying option arrays or compatibility rules.
+The public website passed browser review at 375, 768, 1024, and 1440 pixel viewports with no horizontal overflow and no console warnings/errors. The 375-pixel pass found no non-checkbox interactive target below 44 pixels. Keyboard review verified the skip link and visible 3-pixel focus outline; the reduced-motion rule is present and the design has no ambient animation. Fluid UI remains visible but disabled. Remote + Users and npm + Docker both surfaced the registry's authoritative recovery text, recovered when corrected, and retained the valid Remote experimental warning. The configurator consumes the registry's serializable catalog and resolver rather than copying option arrays or compatibility rules.
+
+All seven official shadcn-svelte 1.5.0 Nova base colors—Neutral, Stone, Zinc, Mauve, Olive, Mist, and Taupe—now have pinned preset codes, checked-in token snapshots, registry lookup coverage, and deterministic generated-output tests. Zinc retains the full responsive visual and generated-project install/check/test/build evidence; repeatable theme-specific visual and multi-OS build evidence for the other base colors remains pending.
 
 ## Deliberate limitations
 
 - Authentication, authorization, sessions, CSRF policy, audit logging, rate limiting, and a production threat model are deferred. Generated documentation says the starter is not production-secure until access control is added.
 - Fluid UI remains Unknown/Unavailable because an authoritative package, theme registry, component API, CSS contract, and licensing story were not established. No API was invented.
-- Only zinc has a verified checked-in shadcn-svelte preset snapshot. Other shadcn base colors remain visible but unavailable.
+- All seven shadcn-svelte Nova base-color snapshots are selectable and deterministically generated. Zinc has the complete responsive visual and generated-project build evidence; equivalent repeatable multi-OS evidence for every theme remains pending.
 - Remote Functions remain upstream Experimental and implement a validated query proof, not Users CRUD parity.
 - No package-manager or Docker result is promoted to universal Stable support from a single host environment.
 - Public-registry invocation is verified on Windows through npm/npx. POSIX executable metadata and repeatable multi-OS registry invocation remain release-hardening work rather than claims of universal support.

@@ -1,3 +1,5 @@
+import type { ThemeId } from '@metonia-admin/registry';
+
 import {
 	getShadcnSvelteThemePreset,
 	shadcnSvelteDependencies,
@@ -105,15 +107,11 @@ export function createShadcnSvelteThemeRecipe(): Recipe {
 		async apply(context) {
 			assertShadcnSelection(context);
 			const preset = getShadcnSvelteThemePreset(context.config.ui.theme);
-			if (preset.snapshot === null) {
-				throw new Error(
-					`The shadcn-svelte ${preset.id} preset is pinned but does not yet have a checked-in theme snapshot.`
-				);
-			}
+			const snapshot = await readThemeSnapshot(preset.snapshot);
 
 			await context.writeFile(
 				'src/routes/layout.css',
-				await readUiAsset(`themes/${preset.snapshot}/layout.css`)
+				renderThemeCss(await readUiAsset('themes/layout.css'), preset.id, snapshot)
 			);
 			context.addCheck({ id: 'shadcn-svelte-theme', validate: validateShadcnTheme });
 		}
@@ -228,18 +226,145 @@ async function validateShadcnAdapter(context: StagedValidationContext): Promise<
 }
 
 async function validateShadcnTheme(context: StagedValidationContext): Promise<void> {
+	const preset = getShadcnSvelteThemePreset(context.config.ui.theme);
+	const snapshot = await readThemeSnapshot(preset.snapshot);
 	const css = await context.readFile('src/routes/layout.css');
 	const expectedFragments = [
+		`/* shadcn-svelte Nova base color: ${preset.id} */`,
 		"@import 'tailwindcss';",
 		"@import 'shadcn-svelte/tailwind.css';",
-		'--primary: #0b7f79;',
+		`--foreground: ${snapshot.foreground};`,
 		'--signal: #c64f1a;',
 		"--font-heading: 'Space Grotesk'",
 		'@media (prefers-reduced-motion: reduce)'
 	];
-	if (expectedFragments.some((fragment) => !css.includes(fragment))) {
-		throw new Error('The checked-in shadcn-svelte zinc theme snapshot is incomplete.');
+	if (
+		expectedFragments.some((fragment) => !css.includes(fragment)) ||
+		css.includes('__SHADCN_') ||
+		css.includes('__LIGHT_THEME_VARIABLES__') ||
+		css.includes('__DARK_THEME_VARIABLES__')
+	) {
+		throw new Error(`The checked-in shadcn-svelte ${preset.id} theme snapshot is incomplete.`);
 	}
+}
+
+const baseColorSnapshotFields = [
+	'foreground',
+	'primary',
+	'primaryForeground',
+	'secondary',
+	'mutedForeground',
+	'border',
+	'ring',
+	'darkSecondary'
+] as const;
+
+type BaseColorSnapshot = Readonly<Record<(typeof baseColorSnapshotFields)[number], string>>;
+
+async function readThemeSnapshot(theme: ThemeId): Promise<BaseColorSnapshot> {
+	const snapshots = parseJsonObject(await readUiAsset('themes/base-colors.json'));
+	const snapshot = getStringRecord(snapshots[theme]);
+	if (baseColorSnapshotFields.some((field) => !snapshot[field])) {
+		throw new Error(`The checked-in shadcn-svelte ${theme} base-color snapshot is incomplete.`);
+	}
+	return snapshot as BaseColorSnapshot;
+}
+
+function renderThemeCss(template: string, theme: ThemeId, snapshot: BaseColorSnapshot): string {
+	const rendered = template
+		.replace('__SHADCN_BASE_COLOR__', theme)
+		.replace('__LIGHT_THEME_VARIABLES__', formatThemeVariables(lightTheme(snapshot), '\t'))
+		.replace('__DARK_THEME_VARIABLES__', formatThemeVariables(darkTheme(snapshot), '\t\t'));
+	if (
+		rendered.includes('__SHADCN_BASE_COLOR__') ||
+		rendered.includes('__LIGHT_THEME_VARIABLES__') ||
+		rendered.includes('__DARK_THEME_VARIABLES__')
+	) {
+		throw new Error(`The shadcn-svelte ${theme} theme template contains unresolved fields.`);
+	}
+	return rendered;
+}
+
+function lightTheme(snapshot: BaseColorSnapshot): readonly (readonly [string, string])[] {
+	return [
+		['background', 'oklch(1 0 0)'],
+		['foreground', snapshot.foreground],
+		['card', 'oklch(1 0 0)'],
+		['card-foreground', snapshot.foreground],
+		['popover', 'oklch(1 0 0)'],
+		['popover-foreground', snapshot.foreground],
+		['primary', snapshot.primary],
+		['primary-foreground', snapshot.primaryForeground],
+		['secondary', snapshot.secondary],
+		['secondary-foreground', snapshot.primary],
+		['muted', snapshot.secondary],
+		['muted-foreground', snapshot.mutedForeground],
+		['accent', snapshot.secondary],
+		['accent-foreground', snapshot.primary],
+		['destructive', 'oklch(0.577 0.245 27.325)'],
+		['border', snapshot.border],
+		['input', snapshot.border],
+		['ring', snapshot.ring],
+		['radius', '0.625rem'],
+		...chartTheme(),
+		['sidebar', snapshot.primaryForeground],
+		['sidebar-foreground', snapshot.foreground],
+		['sidebar-primary', snapshot.primary],
+		['sidebar-primary-foreground', snapshot.primaryForeground],
+		['sidebar-accent', snapshot.secondary],
+		['sidebar-accent-foreground', snapshot.primary],
+		['sidebar-border', snapshot.border],
+		['sidebar-ring', snapshot.ring]
+	];
+}
+
+function darkTheme(snapshot: BaseColorSnapshot): readonly (readonly [string, string])[] {
+	return [
+		['background', snapshot.foreground],
+		['foreground', snapshot.primaryForeground],
+		['card', snapshot.primary],
+		['card-foreground', snapshot.primaryForeground],
+		['popover', snapshot.primary],
+		['popover-foreground', snapshot.primaryForeground],
+		['primary', snapshot.border],
+		['primary-foreground', snapshot.primary],
+		['secondary', snapshot.darkSecondary],
+		['secondary-foreground', snapshot.primaryForeground],
+		['muted', snapshot.darkSecondary],
+		['muted-foreground', snapshot.ring],
+		['accent', snapshot.darkSecondary],
+		['accent-foreground', snapshot.primaryForeground],
+		['destructive', 'oklch(0.704 0.191 22.216)'],
+		['border', 'oklch(1 0 0 / 10%)'],
+		['input', 'oklch(1 0 0 / 15%)'],
+		['ring', snapshot.mutedForeground],
+		...chartTheme(),
+		['sidebar', snapshot.primary],
+		['sidebar-foreground', snapshot.primaryForeground],
+		['sidebar-primary', 'oklch(0.488 0.243 264.376)'],
+		['sidebar-primary-foreground', snapshot.primaryForeground],
+		['sidebar-accent', snapshot.darkSecondary],
+		['sidebar-accent-foreground', snapshot.primaryForeground],
+		['sidebar-border', 'oklch(1 0 0 / 10%)'],
+		['sidebar-ring', snapshot.mutedForeground]
+	];
+}
+
+function chartTheme(): readonly (readonly [string, string])[] {
+	return [
+		['chart-1', 'oklch(0.855 0.138 181.071)'],
+		['chart-2', 'oklch(0.704 0.14 182.503)'],
+		['chart-3', 'oklch(0.6 0.118 184.704)'],
+		['chart-4', 'oklch(0.511 0.096 186.391)'],
+		['chart-5', 'oklch(0.437 0.078 188.216)']
+	];
+}
+
+function formatThemeVariables(
+	variables: readonly (readonly [string, string])[],
+	indent: string
+): string {
+	return variables.map(([name, value]) => `${indent}--${name}: ${value};`).join('\n');
 }
 
 function parseJsonObject(serialized: string): Record<string, unknown> {

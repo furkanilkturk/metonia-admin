@@ -1,6 +1,6 @@
 /// <reference types="bun" />
 
-import { basename } from 'node:path';
+import { basename, resolve } from 'node:path';
 
 import { confirm, isCancel, note, select, text } from '@clack/prompts';
 import {
@@ -11,6 +11,7 @@ import {
 import {
 	capabilityRegistry,
 	getConditionalChoices,
+	normalizeProjectName,
 	resolveConfig,
 	type ConfigIssue,
 	type RawConfig,
@@ -28,6 +29,7 @@ type ToggleName = 'docker' | 'users' | 'install' | 'git';
 
 export interface CliSelection {
 	readonly destination?: string;
+	readonly projectName?: string;
 	readonly packageManager?: string;
 	readonly ui?: string;
 	readonly theme?: string;
@@ -86,6 +88,7 @@ export type GeneratorExecutor = (request: CliGenerationRequest) => Promise<Gener
 export interface CliDependencies {
 	readonly io: CliIo;
 	readonly generate?: GeneratorExecutor;
+	readonly cwd?: string;
 }
 
 export interface CliErrorDetails {
@@ -201,12 +204,13 @@ export async function runCli(
 		const selection = interactive
 			? await collectInteractiveSelection(parsed, requirePrompts(dependencies.io))
 			: collectNonInteractiveSelection(parsed);
-		const configInput = selectionToRawConfig(selection);
+		const configInput = selectionToRawConfig(selection, dependencies.cwd ?? process.cwd());
 		const resolution = resolveConfig(configInput);
 		if (!resolution.ok) {
+			const errors = resolution.issues.filter((issue) => issue.severity === 'error');
 			throw new CliError({
 				code: 'INVALID_CONFIGURATION',
-				message: resolution.issues.map((issue) => issue.message).join(' '),
+				message: errors.map((issue) => issue.message).join(' '),
 				issues: resolution.issues
 			});
 		}
@@ -257,7 +261,17 @@ async function collectInteractiveSelection(
 	parsed: ParsedArguments,
 	prompts: PromptAdapter
 ): Promise<CliSelection> {
-	const destination = parsed.destination ?? (await askText(prompts, 'Project destination'));
+	const projectName =
+		parsed.destination === undefined
+			? await askText(prompts, 'Project name', 'my-admin')
+			: undefined;
+	const destination =
+		parsed.destination ??
+		(await askText(
+			prompts,
+			'Project destination',
+			`./${normalizeProjectName(requirePromptText(projectName))}`
+		));
 	const packageManager =
 		parsed.packageManager ?? (await askChoice(prompts, 'Package manager', 'packageManager', {}));
 	const ui = parsed.ui ?? (await askChoice(prompts, 'UI library', 'ui.adapter', {}));
@@ -286,6 +300,7 @@ async function collectInteractiveSelection(
 	const git = parsed.git ?? (await askBoolean(prompts, 'Initialize a Git repository?', true));
 	return {
 		destination,
+		...(projectName === undefined ? {} : { projectName }),
 		packageManager,
 		ui,
 		theme,
@@ -302,10 +317,10 @@ async function collectInteractiveSelection(
 	};
 }
 
-function selectionToRawConfig(selection: CliSelection): RawConfig {
+function selectionToRawConfig(selection: CliSelection, cwd: string): RawConfig {
 	const destination = requireDestination(selection.destination);
 	return {
-		projectName: basename(destination),
+		projectName: selection.projectName ?? projectNameFromDestination(destination, cwd),
 		...(selection.packageManager === undefined ? {} : { packageManager: selection.packageManager }),
 		ui: {
 			...(selection.ui === undefined ? {} : { adapter: selection.ui }),
@@ -330,8 +345,28 @@ function canonicalDataPattern(value: string): string {
 	return dataPatternAliases[value as keyof typeof dataPatternAliases] ?? value;
 }
 
-async function askText(prompts: PromptAdapter, message: string): Promise<string> {
-	return requirePromptValue(prompts, await prompts.text({ message }));
+async function askText(
+	prompts: PromptAdapter,
+	message: string,
+	initialValue?: string
+): Promise<string> {
+	const value = await prompts.text({
+		message,
+		...(initialValue === undefined ? {} : { initialValue })
+	});
+	if (typeof value === 'string' && value.trim() === '' && initialValue !== undefined) {
+		return initialValue;
+	}
+	return requirePromptValue(prompts, value);
+}
+
+function projectNameFromDestination(destination: string, cwd: string): string {
+	return basename(resolve(cwd, destination));
+}
+
+function requirePromptText(value: string | undefined): string {
+	if (value === undefined) throw new Error('Project name prompt was skipped unexpectedly.');
+	return value;
 }
 
 async function askChoice(
@@ -534,9 +569,11 @@ function defaultForField(field: Parameters<typeof getConditionalChoices>[0]): st
 }
 
 export function formatHelp(): string {
-	return `create-metonia-admin <project> [options]
+	return `create-metonia-admin [destination] [options]
 
 Create a Metonia Admin project.
+
+Run without a destination to choose a project name and a path relative to the current directory.
 
 Options:
   --package-manager <id>  Generated-project package manager

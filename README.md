@@ -9,8 +9,13 @@ The MVP includes a portable `create-metonia-admin` Node CLI, a transactional rec
 Generate a project from the public npm release:
 
 ```bash
-npx create-metonia-admin@latest acme-admin --yes
+npx create-metonia-admin@latest
 ```
+
+The interactive flow asks for a project name, then suggests `./<project-name>`
+relative to the current terminal directory. Enter `./` to use an empty current
+directory. `npm create metonia-admin@latest` and
+`bunx create-metonia-admin@latest` launch the same wizard.
 
 For local CLI development inside this Bun-first monorepo:
 
@@ -46,7 +51,7 @@ Use `--json` for a single versioned machine-readable result. Invalid combination
 The default project contains:
 
 - Svelte 5.56.10, SvelteKit 2.70.3, adapter-node, and Vite 8;
-- a responsive shadcn-svelte Nova admin shell using the verified zinc preset;
+- a responsive shadcn-svelte Nova admin shell with Neutral, Stone, Zinc, Mauve, Olive, Mist, and Taupe base-color choices;
 - Dashboard, full PostgreSQL-backed Users CRUD, and Settings;
 - Zod boundary validation, Drizzle, generic PostgreSQL, and `pg`;
 - native SvelteKit server loads and form actions;
@@ -105,8 +110,7 @@ The registry is the source of truth used by the CLI, website, generator, and tes
 | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Bun 1.4.0, npm 12.0.2, pnpm 11.23.0, Yarn 4.18.0 | Experimental; each full primary graph completed the substantive generate/install/frozen install/check/test/build commands on Windows x64, with manager-specific safety config where required. npm still has a repeat-harness Windows cleanup gate. |
 | Deno 2.9.5                                       | Unknown and fail-closed; the complete hybrid stack is unverified.                                                                                                                                                                                  |
-| shadcn-svelte + zinc                             | Experimental; deterministic snapshot, diagnostics, responsive review, and full generated build passed.                                                                                                                                             |
-| Other shadcn base colors                         | Unknown/unavailable until exact snapshots and their own matrix pass.                                                                                                                                                                               |
+| shadcn-svelte Nova base colors                   | Experimental; Neutral, Stone, Zinc, Mauve, Olive, Mist, and Taupe have pinned deterministic snapshots. Zinc retains the complete generated build and responsive-review evidence; repeatable theme-specific multi-OS evidence remains pending.      |
 | Fluid UI                                         | Unknown/unavailable pending an authoritative package/API/theme contract.                                                                                                                                                                           |
 | Standard SvelteKit                               | Experimental selectable default; full generated stack and real PostgreSQL Users behavior passed on Windows.                                                                                                                                        |
 | Remote Functions                                 | Experimental upstream and in Metonia; validated query-boundary proof only, with Users disabled.                                                                                                                                                    |

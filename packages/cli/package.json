@@ -1,6 +1,6 @@
 {
 	"name": "create-metonia-admin",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Generate native, agent-friendly SvelteKit admin applications.",
 	"license": "MIT",
 	"type": "module",

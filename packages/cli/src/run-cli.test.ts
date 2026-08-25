@@ -89,6 +89,7 @@ describe('runCli', () => {
 			interactive: true,
 			prompts: queuedPrompts([
 				'example-app',
+				'./example-app',
 				'bun',
 				'shadcn-svelte',
 				'zinc',
@@ -122,6 +123,7 @@ describe('runCli', () => {
 		const prompt = queuedPrompts(
 			[
 				'conditional-theme-app',
+				'./conditional-theme-app',
 				'bun',
 				'shadcn-svelte',
 				'zinc',
@@ -166,6 +168,7 @@ describe('runCli', () => {
 			prompts: queuedPrompts(
 				[
 					'remote-app',
+					'./remote-app',
 					'bun',
 					'shadcn-svelte',
 					'zinc',
@@ -271,6 +274,100 @@ describe('runCli', () => {
 			}
 		});
 		expect(destination).toBe('folder with spaces/app name');
+	});
+
+	test('prompts for a project name and defaults its destination relative to the current directory', async () => {
+		let destination = '';
+		const seen: string[] = [];
+		const output = io({
+			interactive: true,
+			prompts: queuedPrompts(
+				[
+					'',
+					'',
+					'bun',
+					'shadcn-svelte',
+					'zinc',
+					'sveltekit-standard',
+					'zod',
+					'drizzle',
+					'postgresql',
+					'generic',
+					'pg',
+					false,
+					true,
+					false,
+					false
+				],
+				seen
+			)
+		});
+		const run = await runCli([], {
+			io: output.io,
+			cwd: 'C:\\workspaces',
+			generate: async (request) => {
+				destination = request.destination;
+				return successfulGeneration(request);
+			}
+		});
+
+		expect(run.exitCode).toBe(0);
+		expect(run.result.ok && run.result.config.projectName).toBe('my-admin');
+		expect(destination).toBe('./my-admin');
+		expect(seen.slice(0, 2)).toEqual(['Project name', 'Project destination']);
+	});
+
+	test('allows the current directory while keeping the explicitly prompted project name', async () => {
+		const output = io({
+			interactive: true,
+			prompts: queuedPrompts([
+				'current-admin',
+				'./',
+				'bun',
+				'shadcn-svelte',
+				'zinc',
+				'sveltekit-standard',
+				'zod',
+				'drizzle',
+				'postgresql',
+				'generic',
+				'pg',
+				false,
+				true,
+				false,
+				false
+			])
+		});
+		const run = await runCli([], { io: output.io, generate: successfulGeneration });
+
+		expect(run.exitCode).toBe(0);
+		expect(run.result.ok && run.result.config.projectName).toBe('current-admin');
+		expect(run.result.ok && run.result.destination).toBe('./');
+	});
+
+	test('derives a valid project name when the positional destination is the current directory', async () => {
+		const output = io();
+		const run = await runCli(['.', '--yes'], {
+			io: output.io,
+			cwd: 'C:\\workspaces\\current-admin',
+			generate: successfulGeneration
+		});
+
+		expect(run.exitCode).toBe(0);
+		expect(run.result.ok && run.result.config.projectName).toBe('current-admin');
+		expect(run.result.ok && run.result.destination).toBe('.');
+	});
+
+	test('reports blocking configuration errors without concatenating support warnings', async () => {
+		const output = io();
+		const run = await runCli(['a'.repeat(215), '--yes'], {
+			io: output.io,
+			generate: successfulGeneration
+		});
+
+		expect(run.result.ok).toBeFalse();
+		expect(output.stderr.join('')).toContain('Project name must normalize');
+		expect(output.stderr.join('')).not.toContain('multi-OS');
 	});
 });
 

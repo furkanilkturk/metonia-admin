@@ -116,12 +116,14 @@ describe('generated-project package-manager recipe plan', () => {
 		);
 		expect(() => createRecipePlan(npmDockerConfig('npm-docker'))).toThrow('only with Bun');
 
-		const zinc = baseProofConfig('unavailable-theme');
-		const unavailableTheme = {
+		const zinc = baseProofConfig('neutral-theme');
+		const neutralTheme = {
 			...zinc,
 			ui: { ...zinc.ui, theme: 'neutral' }
 		} as ResolvedConfig;
-		expect(() => createRecipePlan(unavailableTheme)).toThrow('no verified checked-in snapshot');
+		expect(createRecipePlan(neutralTheme).recipes.map(({ id }) => id)).toContain(
+			'theme-shadcn-svelte'
+		);
 	});
 
 	test('generates the integrated experimental Remote query proof without Users', async () => {
@@ -181,14 +183,9 @@ describe('generated-project package-manager recipe plan', () => {
 
 	test('preflights unsupported feature crossings before creating staging output', async () => {
 		const root = await createTestRoot();
-		const zinc = baseProofConfig('unavailable-theme');
 		const cases: readonly [ResolvedConfig, string][] = [
 			[remoteUsersConfig('remote-users'), 'USERS_RESOURCE_NOT_IMPLEMENTED'],
-			[npmDockerConfig('npm-docker'), 'DOCKER_NOT_IMPLEMENTED'],
-			[
-				{ ...zinc, ui: { ...zinc.ui, theme: 'neutral' } } as ResolvedConfig,
-				'UI_THEME_NOT_IMPLEMENTED'
-			]
+			[npmDockerConfig('npm-docker'), 'DOCKER_NOT_IMPLEMENTED']
 		];
 
 		for (const [config, code] of cases) {

@@ -1,3 +1,4 @@
+/* shadcn-svelte Nova base color: __SHADCN_BASE_COLOR__ */
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Source+Sans+3:opsz,wght@8..60,400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
@@ -49,75 +50,19 @@
 
 :root {
 	color-scheme: light;
-	--background: #f4f7f5;
-	--foreground: #15221f;
-	--card: #ffffff;
-	--card-foreground: #15221f;
-	--popover: #ffffff;
-	--popover-foreground: #15221f;
-	--primary: #0b7f79;
-	--primary-foreground: #ffffff;
-	--secondary: #e7edea;
-	--secondary-foreground: #15221f;
-	--muted: #e7edea;
-	--muted-foreground: #52645e;
-	--accent: #d9e5e1;
-	--accent-foreground: #15221f;
-	--destructive: #b4232d;
-	--border: #c7d3ce;
-	--input: #b6c5bf;
-	--ring: #0b7f79;
+__LIGHT_THEME_VARIABLES__
 	--signal: #c64f1a;
 	--signal-foreground: #ffffff;
 	--warning: #9b6508;
-	--radius: 0.625rem;
-	--chart-1: oklch(0.855 0.138 181.071);
-	--chart-2: oklch(0.704 0.14 182.503);
-	--chart-3: oklch(0.6 0.118 184.704);
-	--chart-4: oklch(0.511 0.096 186.391);
-	--chart-5: oklch(0.437 0.078 188.216);
-	--sidebar: #17211e;
-	--sidebar-foreground: #ecf4f0;
-	--sidebar-primary: #45c4bb;
-	--sidebar-primary-foreground: #081412;
-	--sidebar-accent: #25332e;
-	--sidebar-accent-foreground: #ecf4f0;
-	--sidebar-border: #344640;
-	--sidebar-ring: #67d7cf;
 }
 
 @media (prefers-color-scheme: dark) {
 	:root {
 		color-scheme: dark;
-		--background: #111816;
-		--foreground: #ecf4f0;
-		--card: #17211e;
-		--card-foreground: #ecf4f0;
-		--popover: #1d2925;
-		--popover-foreground: #ecf4f0;
-		--primary: #45c4bb;
-		--primary-foreground: #081412;
-		--secondary: #25332e;
-		--secondary-foreground: #ecf4f0;
-		--muted: #25332e;
-		--muted-foreground: #a9bbb4;
-		--accent: #344640;
-		--accent-foreground: #ecf4f0;
-		--destructive: #f77680;
-		--border: #344640;
-		--input: #455a52;
-		--ring: #67d7cf;
+__DARK_THEME_VARIABLES__
 		--signal: #f28a57;
 		--signal-foreground: #201009;
 		--warning: #f2c15b;
-		--sidebar: #0d1412;
-		--sidebar-foreground: #ecf4f0;
-		--sidebar-primary: #45c4bb;
-		--sidebar-primary-foreground: #081412;
-		--sidebar-accent: #25332e;
-		--sidebar-accent-foreground: #ecf4f0;
-		--sidebar-border: #344640;
-		--sidebar-ring: #67d7cf;
 	}
 }
 
