@@ -93,7 +93,7 @@
     },
     "packages/cli": {
       "name": "create-metonia-admin",
-      "version": "0.1.5",
+      "version": "0.1.6",
       "bin": {
         "create-metonia-admin": "./dist/create-metonia-admin.js",
       },

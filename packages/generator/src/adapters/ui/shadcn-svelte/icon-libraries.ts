@@ -31,7 +31,7 @@ interface IconPlan {
 	readonly dependencies: Readonly<Record<string, string>>;
 	readonly icons: IconMap;
 	readonly packageName: string;
-	readonly style: 'lucide' | 'named' | 'hugeicons';
+	readonly style: 'lucide' | 'named' | 'hugeicons' | 'subpath';
 }
 
 const plans = {
@@ -120,31 +120,31 @@ const plans = {
 		])
 	},
 	remixicon: {
-		style: 'named',
+		style: 'subpath',
 		packageName: 'remixicon-svelte',
 		dependencies: { 'remixicon-svelte': '0.0.5' },
 		icons: mapIcons([
-			'RiArrowLeftLine',
-			'RiArrowRightLine',
-			'RiArrowRightUpLine',
-			'RiCheckLine',
-			'RiArrowDownSLine',
-			'RiArrowRightSLine',
-			'RiArrowUpSLine',
-			'RiErrorWarningLine',
-			'RiCheckboxCircleLine',
-			'RiTimeLine',
-			'RiDashboardLine',
-			'RiMore2Line',
-			'RiMenuLine',
-			'RiSubtractLine',
-			'RiRefreshLine',
-			'RiSearchLine',
-			'RiSearchEyeLine',
-			'RiSettings3Line',
-			'RiAlertLine',
-			'RiGroupLine',
-			'RiCloseLine'
+			'arrow-left-line',
+			'arrow-right-line',
+			'arrow-right-up-line',
+			'check-line',
+			'arrow-down-s-line',
+			'arrow-right-s-line',
+			'arrow-up-s-line',
+			'error-warning-line',
+			'checkbox-circle-line',
+			'time-line',
+			'dashboard-line',
+			'more-2-line',
+			'menu-line',
+			'subtract-line',
+			'refresh-line',
+			'search-line',
+			'search-eye-line',
+			'settings-3-line',
+			'alert-line',
+			'group-line',
+			'close-line'
 		])
 	},
 	hugeicons: {
@@ -208,7 +208,7 @@ function localName(name: SemanticIcon): string {
 }
 
 function renderImports(plan: IconPlan): string {
-	if (plan.style === 'lucide') {
+	if (plan.style === 'lucide' || plan.style === 'subpath') {
 		return semanticIcons
 			.map(
 				(name) => `import ${localName(name)} from '${plan.packageName}/icons/${plan.icons[name]}';`

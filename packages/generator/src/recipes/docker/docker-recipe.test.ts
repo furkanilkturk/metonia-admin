@@ -44,7 +44,8 @@ describe('Docker recipe', () => {
 		expect(await generatedFiles(destination)).toEqual([
 			'.dockerignore',
 			'compose.yaml',
-			'Dockerfile'
+			'Dockerfile',
+			'scripts/docker-migrate.mjs'
 		]);
 
 		const dockerfile = await readFile(join(destination, 'Dockerfile'), 'utf8');
@@ -52,6 +53,8 @@ describe('Docker recipe', () => {
 		expect(dockerfile).toContain('bun install --frozen-lockfile');
 		expect(dockerfile).toContain('FROM oven/bun:1.4.0 AS package-manager');
 		expect(dockerfile).toContain('FROM package-manager AS production-dependencies');
+		expect(dockerfile).toContain('FROM node:24.19.0-bookworm-slim AS migration');
+		expect(dockerfile).toContain('CMD ["node", "scripts/docker-migrate.mjs"]');
 		expect(dockerfile).toContain('bun install --frozen-lockfile --production --ignore-scripts');
 		expect(dockerfile).toContain(
 			'COPY --from=production-dependencies --chown=node:node /app/node_modules ./node_modules'
@@ -63,6 +66,8 @@ describe('Docker recipe', () => {
 		const compose = await readFile(join(destination, 'compose.yaml'), 'utf8');
 		expect(compose).toContain('postgres:17.11-bookworm');
 		expect(compose).toContain('condition: service_healthy');
+		expect(compose).toContain('target: migration');
+		expect(compose).toContain('condition: service_completed_successfully');
 		expect(compose).toContain('pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB');
 		expect(compose).toContain('metonia-postgres-data');
 		expect(compose).toContain('DATABASE_URL:');
@@ -111,6 +116,7 @@ describe('Docker recipe', () => {
 			expect(dockerfile).toContain(
 				`RUN ${formatPackageManagerCommand(docker.productionInstallCommand)}`
 			);
+			expect(dockerfile).toContain('CMD ["node", "scripts/docker-migrate.mjs"]');
 			expect(result.facts.documentFacts['docker.packageManager']).toBe(id);
 		}
 	});

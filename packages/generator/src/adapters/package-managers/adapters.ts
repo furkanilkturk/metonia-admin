@@ -58,6 +58,7 @@ const definitions = Object.freeze({
 		docker: {
 			buildImage: 'node:24.19.0-bookworm-slim',
 			dependencyFiles: ['package.json', 'package-lock.json'],
+			setupCommands: [['npm', 'install', '--global', `npm@${packageManagerVersions.npm}`]],
 			productionInstall: ['ci', '--omit=dev', '--ignore-scripts']
 		}
 	},
@@ -76,7 +77,7 @@ const definitions = Object.freeze({
 		exec: ['dlx'],
 		configurationFiles: {
 			'pnpm-workspace.yaml':
-				'allowBuilds:\n  esbuild: true\nminimumReleaseAgeExclude:\n  - "@lucide/svelte@1.34.0"\n  - "@tabler/icons-svelte@3.46.0"\n  - "@hugeicons/svelte@1.1.5"\n  - "@hugeicons/core-free-icons@4.3.0"\n  - "phosphor-svelte@3.1.0"\n  - "remixicon-svelte@0.0.5"\n'
+				'allowBuilds:\n  esbuild: true\n  "@hugeicons/svelte@1.1.5": true\nminimumReleaseAgeExclude:\n  - "@lucide/svelte@1.34.0"\n  - "@tabler/icons-svelte@3.46.0"\n  - "@hugeicons/svelte@1.1.5"\n  - "@hugeicons/core-free-icons@4.3.0"\n  - "phosphor-svelte@3.1.0"\n  - "remixicon-svelte@0.0.5"\n'
 		},
 		docker: {
 			buildImage: 'node:24.19.0-bookworm-slim',

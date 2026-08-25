@@ -1,4 +1,15 @@
 services:
+  migrate:
+    build:
+      context: .
+      target: migration
+    environment:
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-metonia}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env before starting Compose.}@postgres:5432/${POSTGRES_DB:-metonia_development}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
   app:
     build:
       context: .
@@ -15,6 +26,8 @@ services:
       ORIGIN: ${ORIGIN:-http://localhost:3000}
       DATABASE_URL: "postgresql://${POSTGRES_USER:-metonia}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env before starting Compose.}@postgres:5432/${POSTGRES_DB:-metonia_development}"
     depends_on:
+      migrate:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
         restart: true

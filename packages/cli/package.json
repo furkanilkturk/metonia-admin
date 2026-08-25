@@ -1,6 +1,6 @@
 {
 	"name": "create-metonia-admin",
-	"version": "0.1.5",
+	"version": "0.1.6",
 	"description": "Create polished, native SvelteKit admin apps with shadcn-svelte, Drizzle, PostgreSQL, and clean client/server boundaries.",
 	"license": "MIT",
 	"type": "module",

@@ -18,7 +18,7 @@ Dockerfile
 compose.yaml
 ```
 
-For the MVP PostgreSQL stack, Docker generation may include a PostgreSQL service, persistent volume, healthcheck, and `DATABASE_URL` wiring. Node/runtime and production deployment provider details remain neutral until verified.
+For the MVP PostgreSQL stack, Docker generation includes a PostgreSQL service, persistent volume, healthcheck, `DATABASE_URL` wiring, and a one-shot migration service. The application waits for the migration service to complete successfully before starting. A small Node runner applies committed Drizzle migrations with production `drizzle-orm` and `pg` dependencies; it does not carry the selected package manager's development toolchain. This applies migrations explicitly as part of the Compose workflow without coupling schema changes to ordinary application process startup. Node/runtime and production deployment provider details remain neutral until verified.
 
 The architecture remains open to separating two future choices:
 
@@ -37,6 +37,7 @@ The MVP may use a single simpler Docker option if the generated README and AGENT
 - Database secrets are represented through environment examples, not committed secret values.
 - Destructive Docker cleanup requires resolved, validated targets.
 - Docker does not change the client/server/shared or components/views/pages architecture.
+- Compose must not report the application ready before committed migrations have completed successfully.
 
 ## Extension Procedure
 

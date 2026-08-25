@@ -8,6 +8,7 @@ import type { Recipe, StagedValidationContext } from '../../contracts/index.js';
 import { readGeneratorAsset } from '../assets.js';
 
 const dockerFiles = Object.freeze(['Dockerfile', '.dockerignore', 'compose.yaml'] as const);
+const migrationScript = 'scripts/docker-migrate.mjs';
 
 /**
  * Writes container source only for an explicit Docker selection. The recipe intentionally does
@@ -28,6 +29,7 @@ export function createDockerRecipe(): Recipe {
 			);
 			await context.writeFile('.dockerignore', await readDockerAsset('.dockerignore'));
 			await context.writeFile('compose.yaml', await readDockerAsset('compose.yaml'));
+			await context.writeFile(migrationScript, await readGeneratorAsset('docker/migrate.mjs'));
 			context.addDocumentFact({ key: 'docker.enabled', value: 'true' });
 			context.addDocumentFact({ key: 'docker.localDatabase', value: 'postgres-compose-service' });
 			context.addDocumentFact({ key: 'docker.runtime', value: dockerRuntime.nodeImage });
@@ -43,7 +45,11 @@ export function createDockerRecipe(): Recipe {
 
 async function validateDockerOutput(context: StagedValidationContext): Promise<void> {
 	if (!context.config.docker) {
-		if ((await Promise.all(dockerFiles.map((file) => context.exists(file)))).some(Boolean)) {
+		if (
+			(
+				await Promise.all([...dockerFiles, migrationScript].map((file) => context.exists(file)))
+			).some(Boolean)
+		) {
 			throw new Error('Docker-disabled output must not contain Docker source files.');
 		}
 		return;
@@ -51,7 +57,11 @@ async function validateDockerOutput(context: StagedValidationContext): Promise<v
 
 	assertSupportedDockerConfiguration(context.config);
 	const packageManager = requireDockerPackageManager(context.config.packageManager);
-	if (!(await Promise.all(dockerFiles.map((file) => context.exists(file)))).every(Boolean)) {
+	if (
+		!(
+			await Promise.all([...dockerFiles, migrationScript].map((file) => context.exists(file)))
+		).every(Boolean)
+	) {
 		throw new Error('Docker-enabled output is missing a required Docker source file.');
 	}
 
@@ -66,6 +76,12 @@ async function validateDockerOutput(context: StagedValidationContext): Promise<v
 		!dockerfile.includes(
 			`RUN ${formatPackageManagerCommand(packageManager.frozenInstallCommand)}`
 		) ||
+		!dockerfile.includes(`FROM ${dockerRuntime.nodeImage} AS migration`) ||
+		!dockerfile.includes('COPY --chown=node:node drizzle ./drizzle') ||
+		!dockerfile.includes(
+			'COPY --chown=node:node scripts/docker-migrate.mjs ./scripts/docker-migrate.mjs'
+		) ||
+		!dockerfile.includes('CMD ["node", "scripts/docker-migrate.mjs"]') ||
 		!dockerfile.includes(`RUN ${formatPackageManagerCommand(docker.productionInstallCommand)}`) ||
 		!dockerfile.includes(`RUN ${formatPackageManagerCommand(packageManager.run('build'))}`) ||
 		!dockerfile.includes(
@@ -95,7 +111,9 @@ async function validateDockerOutput(context: StagedValidationContext): Promise<v
 	}
 	if (
 		!compose.includes(`image: ${dockerRuntime.postgresImage}`) ||
+		!compose.includes('target: migration') ||
 		!compose.includes('condition: service_healthy') ||
+		!compose.includes('condition: service_completed_successfully') ||
 		!compose.includes('pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB') ||
 		!compose.includes('metonia-postgres-data') ||
 		!compose.includes('DATABASE_URL:') ||

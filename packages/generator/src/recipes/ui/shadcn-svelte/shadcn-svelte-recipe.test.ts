@@ -205,6 +205,12 @@ describe('shadcn-svelte admin workbench recipes', () => {
 			expect(components.iconLibrary).toBe(iconLibrary);
 			expect(packageJson.dependencies[dependency]).toBeString();
 			expect(appIcon).toContain(dependency);
+			if (iconLibrary === 'remixicon') {
+				expect(appIcon).toContain(
+					"import DashboardIcon from 'remixicon-svelte/icons/dashboard-line';"
+				);
+				expect(appIcon).not.toContain("from 'remixicon-svelte';");
+			}
 		}
 	}, 60_000);
 

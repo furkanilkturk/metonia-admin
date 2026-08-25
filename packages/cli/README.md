@@ -1,8 +1,4 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/furkanilkturk/metonia-admin/main/docs/assets/metonia-admin-hero.svg" alt="Metonia Admin — native SvelteKit admin apps without a hidden runtime" width="100%" />
-</p>
-
-<p align="center">
   <a href="https://www.npmjs.com/package/create-metonia-admin"><img alt="npm version" src="https://img.shields.io/npm/v/create-metonia-admin?style=for-the-badge&logo=npm&color=CB3837" /></a>
   <a href="https://github.com/furkanilkturk/metonia-admin"><img alt="GitHub repository" src="https://img.shields.io/badge/GitHub-source-181717?style=for-the-badge&logo=github" /></a>
   <a href="https://github.com/furkanilkturk/metonia-admin/blob/main/LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-42C777?style=for-the-badge" /></a>
@@ -30,8 +26,6 @@ npm create metonia-admin@latest
 pnpm dlx create-metonia-admin@latest
 yarn dlx create-metonia-admin@latest
 ```
-
-> npm displays `npm i create-metonia-admin` because this is a package. That command installs it; use one of the runner commands above to create a project.
 
 ## Included by default
 

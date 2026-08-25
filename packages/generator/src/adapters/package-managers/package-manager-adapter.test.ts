@@ -102,7 +102,7 @@ describe('generated-project package-manager adapters', () => {
 	test('keeps current install safety gates explicit and narrowly approved', () => {
 		expect(getPackageManagerAdapter('pnpm').configurationFiles).toEqual({
 			'pnpm-workspace.yaml':
-				'allowBuilds:\n  esbuild: true\nminimumReleaseAgeExclude:\n  - "@lucide/svelte@1.34.0"\n  - "@tabler/icons-svelte@3.46.0"\n  - "@hugeicons/svelte@1.1.5"\n  - "@hugeicons/core-free-icons@4.3.0"\n  - "phosphor-svelte@3.1.0"\n  - "remixicon-svelte@0.0.5"\n'
+				'allowBuilds:\n  esbuild: true\n  "@hugeicons/svelte@1.1.5": true\nminimumReleaseAgeExclude:\n  - "@lucide/svelte@1.34.0"\n  - "@tabler/icons-svelte@3.46.0"\n  - "@hugeicons/svelte@1.1.5"\n  - "@hugeicons/core-free-icons@4.3.0"\n  - "phosphor-svelte@3.1.0"\n  - "remixicon-svelte@0.0.5"\n'
 		});
 		expect(getPackageManagerAdapter('yarn').configurationFiles).toEqual({
 			'.yarnrc.yml':
@@ -124,6 +124,7 @@ describe('generated-project package-manager adapters', () => {
 		});
 		expect(getPackageManagerAdapter('npm').docker).toMatchObject({
 			dependencyFiles: ['package.json', 'package-lock.json'],
+			setupCommands: [{ executable: 'npm', arguments: ['install', '--global', 'npm@12.0.2'] }],
 			productionInstallCommand: {
 				executable: 'npm',
 				arguments: ['ci', '--omit=dev', '--ignore-scripts']

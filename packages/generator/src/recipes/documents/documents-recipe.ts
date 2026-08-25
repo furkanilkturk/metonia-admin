@@ -107,7 +107,7 @@ function documentReplacements(
 			? 'Dockerfile, .dockerignore, and compose.yaml are writable source files; keep their package-manager and environment wiring aligned with this project.'
 			: 'Docker support is disabled, so do not add Docker-only commands or files without first changing the project configuration.',
 		DOCKER_GUIDE: config.docker
-			? `## Docker\n\nSet POSTGRES_PASSWORD in a local .env file, then use \`docker compose up --build\`. The Compose stack health-checks PostgreSQL and runs the Node adapter output without baking credentials into the image.`
+			? `## Docker\n\nSet POSTGRES_PASSWORD in a local .env file, then use \`docker compose up --build\`. The Compose stack health-checks PostgreSQL, applies committed Drizzle migrations in a one-shot service, and starts the Node adapter output only after migration succeeds. Credentials are not baked into the image.`
 			: '## Docker\n\nDocker support is disabled; this project contains no Docker-only workflow.',
 		DOCKER_ENVIRONMENT: config.docker
 			? `\n# Docker Compose development defaults. Replace the password before starting Compose.\nPOSTGRES_USER=metonia\nPOSTGRES_DB=metonia_development\nPOSTGRES_PASSWORD=replace-with-a-long-random-password\nAPP_PORT=3000\nORIGIN=http://localhost:3000`
