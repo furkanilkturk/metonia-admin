@@ -1,6 +1,7 @@
 /// <reference types="bun" />
 
 import { lstat, mkdir, mkdtemp, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { basename, dirname, isAbsolute, join, parse, relative, resolve, sep } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 
@@ -179,7 +180,7 @@ export async function generateProject(
 			throw generationError(
 				'FINALIZATION_FAILED',
 				'finalize',
-				'Unable to publish the staged project safely.'
+				'Unable to move the completed project into its destination safely. Close tools watching the destination, make sure it is still empty, and retry.'
 			);
 		}
 		stages.push({ stage: 'finalize', status: 'completed' });
@@ -470,31 +471,47 @@ async function assertPathContainsNoSymlink(path: string): Promise<void> {
 }
 
 async function createStagingDirectory(destination: DestinationState): Promise<string> {
-	const prefix = join(destination.parent, `.${basename(destination.destination)}.metonia-staging-`);
+	const stagingParent = await selectStagingParent(destination.parent);
+	const prefix = join(stagingParent, `.${basename(destination.destination)}.metonia-staging-`);
 	const stagingDirectory = await mkdtemp(prefix);
 	if (
-		!isOwnedStagingDirectory(
-			stagingDirectory,
-			destination.parent,
-			basename(destination.destination)
-		)
+		!isOwnedStagingDirectory(stagingDirectory, stagingParent, basename(destination.destination))
 	) {
 		throw new Error('Unexpected staging location.');
 	}
 	return stagingDirectory;
 }
 
+async function selectStagingParent(destinationParent: string): Promise<string> {
+	const temporaryRoot = resolve(tmpdir());
+	if (temporaryRoot === destinationParent) return destinationParent;
+
+	try {
+		await assertPathContainsNoSymlink(temporaryRoot);
+		const [temporaryStat, destinationStat] = await Promise.all([
+			lstat(temporaryRoot),
+			lstat(destinationParent)
+		]);
+		if (
+			temporaryStat.isDirectory() &&
+			!temporaryStat.isSymbolicLink() &&
+			temporaryStat.dev === destinationStat.dev
+		) {
+			return temporaryRoot;
+		}
+	} catch {
+		// Fall back to the destination parent when system temp cannot preserve a
+		// same-filesystem atomic rename.
+	}
+
+	return destinationParent;
+}
+
 async function finalizeStaging(
 	destination: DestinationState,
 	stagingDirectory: string
 ): Promise<void> {
-	if (
-		!isOwnedStagingDirectory(
-			stagingDirectory,
-			destination.parent,
-			basename(destination.destination)
-		)
-	) {
+	if (!isAllowedStagingDirectory(stagingDirectory, destination)) {
 		throw new Error('Unowned staging location.');
 	}
 
@@ -627,6 +644,17 @@ function isOwnedStagingDirectory(
 	return (
 		dirname(stagingDirectory) === parent &&
 		basename(stagingDirectory).startsWith(`.${destinationBase}.metonia-staging-`)
+	);
+}
+
+function isAllowedStagingDirectory(
+	stagingDirectory: string,
+	destination: DestinationState
+): boolean {
+	const stagingParent = dirname(stagingDirectory);
+	return (
+		(stagingParent === destination.parent || stagingParent === resolve(tmpdir())) &&
+		isOwnedStagingDirectory(stagingDirectory, stagingParent, basename(destination.destination))
 	);
 }
 

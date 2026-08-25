@@ -1,9 +1,12 @@
 /// <reference types="bun" />
 
 import { afterEach, describe, expect, test } from 'bun:test';
+import { spawn } from 'node:child_process';
+import { once } from 'node:events';
 import { lstat, mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile } from 'node:fs/promises';
-import { basename, join, relative, resolve } from 'node:path';
+import { basename, dirname, join, relative, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
+import { setTimeout as delay } from 'node:timers/promises';
 
 import { resolveConfig, type ResolvedConfig } from '@metonia-admin/registry';
 
@@ -249,7 +252,11 @@ describe('generateProject', () => {
 
 		expect(result).toMatchObject({
 			ok: false,
-			error: { code: 'FINALIZATION_FAILED', stage: 'finalize' }
+			error: {
+				code: 'FINALIZATION_FAILED',
+				message: expect.stringContaining('Close tools watching the destination'),
+				stage: 'finalize'
+			}
 		});
 		expect(await readFile(join(destination, 'generated.txt'), 'utf8')).toBe('external');
 	});
@@ -273,6 +280,7 @@ describe('generateProject', () => {
 				runCommand: async (invocation) => {
 					invocations.push(invocation);
 					expect(invocation.cwd).not.toBe(destination);
+					expect(dirname(invocation.cwd)).not.toBe(dirname(destination));
 					expect(basename(invocation.cwd)).toContain('.metonia-staging-');
 					return 0;
 				}
@@ -286,6 +294,85 @@ describe('generateProject', () => {
 		]);
 		expect(result.stages.map(({ stage }) => stage)).toContain('install-dependencies');
 		expect(result.stages.map(({ stage }) => stage)).toContain('initialize-git');
+		expect(await readFile(join(destination, 'generated.txt'), 'utf8')).toBe('generated');
+	});
+
+	test('keeps same-filesystem staging outside the destination workspace', async () => {
+		const root = await createTestRoot();
+		const workspace = join(root, 'open editor workspace');
+		const destination = join(workspace, 'generated project');
+		await mkdir(workspace);
+		let observedStaging = '';
+
+		const result = await generateProject(
+			{
+				config: testConfig(),
+				destination,
+				operations: { install: { executable: 'bun', arguments: ['install'] } },
+				recipes: [writeRecipe('base')]
+			},
+			{
+				runCommand: async ({ cwd }) => {
+					observedStaging = cwd;
+					expect(relative(workspace, cwd).startsWith('..')).toBeTrue();
+					expect(
+						(await readdir(workspace)).some((entry) => entry.includes('.metonia-staging-'))
+					).toBeFalse();
+					return 0;
+				}
+			}
+		);
+
+		expect(result.ok).toBeTrue();
+		expect(observedStaging).not.toBe('');
+		expect(await exists(observedStaging)).toBeFalse();
+		expect(await readFile(join(destination, 'generated.txt'), 'utf8')).toBe('generated');
+	});
+
+	test('avoids Windows editor locks on a staging directory discovered inside the workspace', async () => {
+		if (process.platform !== 'win32') return;
+
+		const root = await createTestRoot();
+		const workspace = join(root, 'watched workspace');
+		const destination = join(workspace, 'generated project');
+		await mkdir(workspace);
+		let editorWorker: ReturnType<typeof spawn> | undefined;
+		let result: Awaited<ReturnType<typeof generateProject>>;
+
+		try {
+			result = await generateProject(
+				{
+					config: testConfig(),
+					destination,
+					operations: { install: { executable: 'bun', arguments: ['install'] } },
+					recipes: [writeRecipe('base')]
+				},
+				{
+					runCommand: async () => {
+						const stagingEntry = (await readdir(workspace)).find((entry) =>
+							entry.includes('.metonia-staging-')
+						);
+						if (stagingEntry !== undefined) {
+							editorWorker = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], {
+								cwd: join(workspace, stagingEntry),
+								stdio: 'ignore',
+								windowsHide: true
+							});
+							await once(editorWorker, 'spawn');
+						}
+						return 0;
+					}
+				}
+			);
+		} finally {
+			if (editorWorker !== undefined && editorWorker.exitCode === null) {
+				editorWorker.kill();
+				await Promise.race([once(editorWorker, 'exit'), delay(2_000)]);
+			}
+		}
+
+		expect(editorWorker).toBeUndefined();
+		expect(result!.ok).toBeTrue();
 		expect(await readFile(join(destination, 'generated.txt'), 'utf8')).toBe('generated');
 	});
 

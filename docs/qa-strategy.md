@@ -87,7 +87,7 @@ Use a real subprocess for at least one success and one failure per CLI output mo
 
 Integration tests must generate into a newly-created temporary directory outside the repository's source and fixture trees. Never run dependency installation, migrations, or Docker commands in a checked-in golden fixture. The test records the generated project path and removes it in a `finally`/cleanup step; failed runs may preserve a uniquely named artifact directory when CI diagnostics are needed.
 
-Before generation, resolve and validate the complete config. Then write into a staging directory under the same parent filesystem as the requested destination. Publish the destination only after all file recipes that precede publication succeed. If a stage fails:
+Before generation, resolve and validate the complete config. Then write into a private staging directory on the same filesystem as the requested destination. Prefer the system temporary directory when it is on that filesystem so editor file watchers do not mistake an in-progress tree for the finished project; fall back to the destination parent when necessary. Publish the destination only after all file recipes that precede publication succeed. If a stage fails:
 
 1. Report the stage id and the underlying safe error.
 2. Leave the requested destination absent or unchanged.

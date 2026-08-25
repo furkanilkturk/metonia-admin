@@ -133,7 +133,7 @@ The generator runs these phases:
 
 1. Parse input and resolve configuration without filesystem writes.
 2. Validate capability status, ownership, compatibility, destination safety, and requested options.
-3. Create a private staging directory under the destination parent.
+3. Create a private staging directory on the destination filesystem, preferring an out-of-workspace system temporary directory and falling back to the destination parent when required for atomic publication.
 4. Run ordered recipe stages and collect contributions/checks.
 5. Render generated documents from the resolved config and validate the staged tree.
 6. Publish the completed staging tree to the destination using the safest same-filesystem finalization available.
