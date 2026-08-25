@@ -4,10 +4,14 @@ import type {
 	DashboardWindow
 } from '$lib/shared/types/dashboard.js';
 
+const windowRank: Readonly<Record<DashboardWindow, number>> = { '24h': 0, '7d': 1, '30d': 2 };
+
 export class DashboardState {
 	query = $state('');
 	status = $state<DashboardStatusFilter>('all');
 	window = $state<DashboardWindow>('7d');
+	isLoading = $state(false);
+	lastUpdated = $state('Updated just now');
 	operations = $state.raw<readonly DashboardOperation[]>([]);
 
 	filteredOperations = $derived.by(() => {
@@ -18,12 +22,15 @@ export class DashboardState {
 				operation.name.toLocaleLowerCase().includes(query) ||
 				operation.owner.toLocaleLowerCase().includes(query);
 			const matchesStatus = this.status === 'all' || operation.status === this.status;
-			return matchesQuery && matchesStatus;
+			const matchesWindow = windowRank[operation.updatedWithin] <= windowRank[this.window];
+			return matchesQuery && matchesStatus && matchesWindow;
 		});
 	});
 
 	activeFilterCount = $derived(
-		Number(this.query.trim().length > 0) + Number(this.status !== 'all')
+		Number(this.query.trim().length > 0) +
+			Number(this.status !== 'all') +
+			Number(this.window !== '7d')
 	);
 
 	constructor(operations: readonly DashboardOperation[]) {

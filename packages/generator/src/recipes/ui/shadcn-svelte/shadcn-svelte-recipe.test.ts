@@ -109,10 +109,23 @@ describe('shadcn-svelte admin workbench recipes', () => {
 		).not.toContain("href: '/users'");
 		expect(
 			await readFile(join(destination, 'src/lib/client/ui/pages/dashboard.svelte'), 'utf8')
-		).toContain('Dashboard recipe signature');
+		).toContain('<DashboardMetrics');
+		expect(await readFile(join(destination, 'src/routes/+error.svelte'), 'utf8')).toContain(
+			"import ErrorPage from '$lib/client/ui/pages/error.svelte';"
+		);
 		expect(
-			await readFile(join(destination, 'src/lib/client/ui/pages/settings.svelte'), 'utf8')
-		).not.toContain('RecipeTrace');
+			await readFile(join(destination, 'src/lib/client/ui/pages/error.svelte'), 'utf8')
+		).toContain('This page is off the map.');
+		const dashboardTable = await readFile(
+			join(destination, 'src/lib/client/ui/views/dashboard/dashboardTable.svelte'),
+			'utf8'
+		);
+		expect(dashboardTable).toContain("from '$lib/client/ui/components/table/index.js'");
+		expect(dashboardTable).toContain('Loading operations');
+		expect(dashboardTable).toContain('No operations found');
+		expect(
+			await readFile(join(destination, 'src/lib/client/ui/pages/layout/AdminShell.svelte'), 'utf8')
+		).toContain("import { navigating, page } from '$app/state';");
 	});
 
 	test('generates every pinned Nova base-color snapshot', async () => {

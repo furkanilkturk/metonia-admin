@@ -67,6 +67,8 @@ src/lib
 
 The dependency rules are `client -> shared <- server` and `pages -> views -> components`. Standard mode uses SvelteKit loads and form actions. Remote Functions are an explicit Experimental query-boundary option.
 
+The generated Dashboard includes a real shadcn-svelte operations table, responsive filters, a refresh skeleton, an actionable empty state, navigation feedback, and a custom root 404 page. These surfaces stay behind the UI adapter's canonical component aliases so a future verified Fluid UI adapter can replace primitives without changing page, view, or route ownership.
+
 ## Current release status
 
 Version 0.1 is an early public test release. Bun, npm, pnpm, and Yarn generated-project paths have Windows integration evidence but remain Experimental pending repeatable multi-OS verification. Deno and Fluid UI are visible but unavailable. The shadcn-svelte adapter offers the pinned Neutral, Stone, Zinc, Mauve, Olive, Mist, and Taupe Nova base colors. Authentication and authorization are deliberately deferred; add access control before production use.

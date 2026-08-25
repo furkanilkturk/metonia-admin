@@ -2,7 +2,8 @@
 	import { Button } from '$lib/client/ui/components/button/index.js';
 	import { Input } from '$lib/client/ui/components/input/index.js';
 	import SearchIcon from '@lucide/svelte/icons/search';
-	import SlidersHorizontalIcon from '@lucide/svelte/icons/sliders-horizontal';
+	import RefreshCwIcon from '@lucide/svelte/icons/refresh-cw';
+	import XIcon from '@lucide/svelte/icons/x';
 	import type {
 		DashboardStatusFilter,
 		DashboardWindow
@@ -10,23 +11,31 @@
 
 	interface Props {
 		activeFilterCount: number;
+		isLoading: boolean;
+		lastUpdated: string;
 		onClear: () => void;
 		onQueryChange: (query: string) => void;
+		onRefresh: () => Promise<void> | void;
 		onStatusChange: (status: DashboardStatusFilter) => void;
 		onWindowChange: (window: DashboardWindow) => void;
 		query: string;
 		status: DashboardStatusFilter;
+		visibleCount: number;
 		window: DashboardWindow;
 	}
 
 	let {
 		activeFilterCount,
+		isLoading,
+		lastUpdated,
 		onClear,
 		onQueryChange,
+		onRefresh,
 		onStatusChange,
 		onWindowChange,
 		query,
 		status,
+		visibleCount,
 		window
 	}: Props = $props();
 
@@ -43,40 +52,53 @@
 	}
 </script>
 
-<section class="rounded-xl border border-border bg-card p-4" aria-labelledby="dashboard-filter-heading">
-	<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+<div class="border-b border-border px-4 py-5 sm:px-6">
+	<div class="flex flex-wrap items-start justify-between gap-4">
 		<div>
-			<h2 id="dashboard-filter-heading" class="flex items-center gap-2 text-base font-semibold">
-				<SlidersHorizontalIcon class="size-4 text-primary" aria-hidden="true" />
-				Operation filters
-			</h2>
-			<p class="mt-1 text-sm text-muted-foreground">Narrow the starter data without leaving the page.</p>
+			<div class="flex flex-wrap items-center gap-2.5">
+				<h2 id="operations-heading" class="font-heading text-lg font-semibold tracking-tight">Operations</h2>
+				<span class="rounded-full bg-brand/10 px-2.5 py-1 font-mono text-[0.6875rem] font-semibold text-brand">
+					{visibleCount} visible
+				</span>
+			</div>
+			<p class="mt-1 text-sm text-muted-foreground">Monitor ownership, status, and the next handoff.</p>
 		</div>
-		<Button variant="ghost" onclick={onClear} disabled={activeFilterCount === 0} class="min-h-11 sm:min-h-8">
-			Clear filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
-		</Button>
+
+		<div class="flex items-center gap-2">
+			<span class="hidden text-xs text-muted-foreground sm:inline" aria-live="polite">
+				{isLoading ? 'Refreshing operations' : lastUpdated}
+			</span>
+			<Button
+				variant="outline"
+				size="icon-lg"
+				class="size-11 sm:size-9"
+				onclick={onRefresh}
+				disabled={isLoading}
+				aria-label={isLoading ? 'Refreshing operations' : 'Refresh operations'}
+			>
+				<RefreshCwIcon class={['size-4', isLoading && 'animate-spin']} aria-hidden="true" />
+			</Button>
+		</div>
 	</div>
 
-	<div class="grid gap-4 md:grid-cols-[minmax(14rem,1fr)_minmax(10rem,0.45fr)_minmax(9rem,0.35fr)]">
-		<label class="grid gap-1.5 text-sm font-medium" for="operation-search">
-			Search operations
-			<span class="relative">
-				<SearchIcon class="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-				<Input
-					id="operation-search"
-					class="h-11 pl-9 sm:h-9"
-					value={query}
-					oninput={handleQuery}
-					placeholder="Name or owner"
-				/>
-			</span>
+	<div class="mt-5 grid gap-3 lg:grid-cols-[minmax(15rem,1fr)_11rem_10rem_auto]">
+		<label class="relative block" for="operation-search">
+			<span class="sr-only">Search operations</span>
+			<SearchIcon class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+			<Input
+				id="operation-search"
+				class="h-11 bg-background pl-9 sm:h-10"
+				value={query}
+				oninput={handleQuery}
+				placeholder="Search name, owner, or ID"
+			/>
 		</label>
 
-		<label class="grid gap-1.5 text-sm font-medium" for="operation-status">
-			Status
+		<label for="operation-status">
+			<span class="sr-only">Filter by status</span>
 			<select
 				id="operation-status"
-				class="h-11 rounded-lg border border-input bg-background px-3 text-sm focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:h-9"
+				class="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:h-10"
 				value={status}
 				onchange={handleStatus}
 			>
@@ -87,11 +109,11 @@
 			</select>
 		</label>
 
-		<label class="grid gap-1.5 text-sm font-medium" for="operation-window">
-			Time window
+		<label for="operation-window">
+			<span class="sr-only">Filter by time window</span>
 			<select
 				id="operation-window"
-				class="h-11 rounded-lg border border-input bg-background px-3 text-sm focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:h-9"
+				class="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:h-10"
 				value={window}
 				onchange={handleWindow}
 			>
@@ -100,5 +122,12 @@
 				<option value="30d">Last 30 days</option>
 			</select>
 		</label>
+
+		{#if activeFilterCount > 0}
+			<Button variant="ghost" onclick={onClear} class="h-11 justify-start gap-2 px-3 lg:justify-center sm:h-10">
+				<XIcon class="size-4" aria-hidden="true" />
+				Reset
+			</Button>
+		{/if}
 	</div>
-</section>
+</div>

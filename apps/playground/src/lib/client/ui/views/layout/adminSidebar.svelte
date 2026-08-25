@@ -19,12 +19,12 @@
 >
 	<div class="flex min-h-16 items-center gap-3 border-b border-sidebar-border px-4">
 		<span
-			class="grid size-9 shrink-0 place-items-center rounded-lg bg-sidebar-primary font-heading text-base font-semibold text-sidebar-primary-foreground"
+			class="grid size-9 shrink-0 place-items-center rounded-lg bg-brand font-heading text-base font-semibold text-brand-foreground shadow-sm"
 			aria-hidden="true">M</span
 		>
 		<div class="min-w-0">
 			<p class="truncate font-heading text-sm font-semibold">Metonia Admin</p>
-			<p class="truncate font-mono text-[0.6875rem] text-sidebar-foreground/65">Native workbench</p>
+			<p class="truncate font-mono text-[0.6875rem] text-sidebar-foreground/65">Operations console</p>
 		</div>
 	</div>
 
@@ -42,7 +42,7 @@
 						class={[
 							'group flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
 							pathname === item.href
-								? 'bg-sidebar-accent text-sidebar-accent-foreground'
+								? 'bg-sidebar-accent text-sidebar-accent-foreground shadow-sm ring-1 ring-sidebar-border'
 								: 'text-sidebar-foreground/75 hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground'
 						]}
 					>
@@ -57,8 +57,8 @@
 		</ul>
 	</nav>
 
-	<div class="m-3 rounded-lg border border-sidebar-border bg-sidebar-accent/45 p-3">
-		<p class="font-mono text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-sidebar-primary">
+	<div class="m-3 rounded-xl border border-sidebar-border bg-sidebar-accent/45 p-3.5">
+		<p class="font-mono text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-warning">
 			Auth deferred
 		</p>
 		<p class="mt-1 text-xs leading-5 text-sidebar-foreground/70">

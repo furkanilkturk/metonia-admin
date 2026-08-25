@@ -42,19 +42,19 @@
 						class="h-11 max-w-56 justify-start gap-2 px-2 sm:px-3"
 						aria-label="Open workspace menu"
 					>
-						<span class="grid size-7 shrink-0 place-items-center rounded-md bg-primary text-xs font-semibold text-primary-foreground" aria-hidden="true">
+						<span class="grid size-7 shrink-0 place-items-center rounded-md bg-brand text-xs font-semibold text-brand-foreground" aria-hidden="true">
 							MA
 						</span>
 						<span class="hidden min-w-0 text-left sm:block">
-							<span class="block truncate text-sm font-medium">Starter workspace</span>
-							<span class="block truncate text-xs font-normal text-muted-foreground">Authentication not configured</span>
+							<span class="block truncate text-sm font-medium">Operations workspace</span>
+							<span class="block truncate text-xs font-normal text-muted-foreground">5 active workflows</span>
 						</span>
 						<ChevronDownIcon class="hidden size-4 shrink-0 sm:block" aria-hidden="true" />
 					</Button>
 				{/snippet}
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Content align="end" class="w-64">
-				<DropdownMenu.Label>Starter workspace</DropdownMenu.Label>
+				<DropdownMenu.Label>Operations workspace</DropdownMenu.Label>
 				<DropdownMenu.Separator />
 				<DropdownMenu.Item>
 					{#snippet child({ props })}

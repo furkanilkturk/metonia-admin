@@ -52,7 +52,8 @@ The default project contains:
 
 - Svelte 5.56.10, SvelteKit 2.70.3, adapter-node, and Vite 8;
 - a responsive shadcn-svelte Nova admin shell with Neutral, Stone, Zinc, Mauve, Olive, Mist, and Taupe base-color choices;
-- Dashboard, full PostgreSQL-backed Users CRUD, and Settings;
+- a task-focused Dashboard with a real shadcn-svelte table, responsive loading and empty states, navigation feedback, and a custom 404 surface;
+- full PostgreSQL-backed Users CRUD and Settings;
 - Zod boundary validation, Drizzle, generic PostgreSQL, and `pg`;
 - native SvelteKit server loads and form actions;
 - migrations, `.env.example`, and explicit database scripts;

@@ -4,17 +4,24 @@
 	import * as Dialog from '$lib/client/ui/components/dialog/index.js';
 	import AdminHeader from '$lib/client/ui/views/layout/adminHeader.svelte';
 	import AdminSidebar from '$lib/client/ui/views/layout/adminSidebar.svelte';
-	import { page } from '$app/state';
+	import { navigating, page } from '$app/state';
 	import XIcon from '@lucide/svelte/icons/x';
 	import type { Snippet } from 'svelte';
 
 	let { children }: { children: Snippet } = $props();
 	let navigationOpen = $state(false);
 	let pathname = $derived(page.url.pathname);
+	let isNavigating = $derived(Boolean(navigating.to));
 	let currentLabel = $derived(
 		adminNavigation.find((item) => item.href === pathname)?.label ?? 'Workspace'
 	);
 </script>
+
+{#if isNavigating}
+	<div class="route-progress fixed inset-x-0 top-0 z-[80] h-0.5 overflow-hidden bg-brand/15" role="progressbar" aria-label="Loading page">
+		<span class="block h-full w-1/3 bg-brand"></span>
+	</div>
+{/if}
 
 <a
 	href="#admin-content"
@@ -61,3 +68,25 @@
 		</Dialog.Close>
 	</Dialog.Content>
 </Dialog.Root>
+
+<style>
+	.route-progress span {
+		animation: route-progress 1.1s ease-in-out infinite;
+	}
+
+	@keyframes route-progress {
+		0% {
+			transform: translateX(-110%);
+		}
+		100% {
+			transform: translateX(410%);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.route-progress span {
+			width: 100%;
+			animation: none;
+		}
+	}
+</style>

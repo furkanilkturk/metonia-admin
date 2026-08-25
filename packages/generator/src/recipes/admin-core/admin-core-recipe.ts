@@ -2,10 +2,10 @@ import type { Recipe, RecipeContext, StagedValidationContext } from '../../contr
 import { readGeneratorAsset } from '../assets.js';
 
 const adminCoreAssetFiles = Object.freeze([
-	'src/lib/client/ui/components/recipe-trace/RecipeTrace.svelte',
 	'src/lib/client/ui/pages/dashboard/dashboardController.ts',
 	'src/lib/client/ui/pages/dashboard/dashboardState.svelte.ts',
 	'src/lib/client/ui/pages/dashboard.svelte',
+	'src/lib/client/ui/pages/error.svelte',
 	'src/lib/client/ui/pages/layout/AdminShell.svelte',
 	'src/lib/client/ui/pages/settings.svelte',
 	'src/lib/client/ui/views/dashboard/dashboardActivity.svelte',
@@ -16,6 +16,7 @@ const adminCoreAssetFiles = Object.freeze([
 	'src/lib/client/ui/views/layout/adminSidebar.svelte',
 	'src/lib/client/ui/views/settings/settingsSummary.svelte',
 	'src/lib/shared/types/dashboard.ts',
+	'src/routes/+error.svelte',
 	'src/routes/+page.server.ts',
 	'src/routes/(admin)/+layout.svelte',
 	'src/routes/(admin)/dashboard/+page.svelte',
@@ -108,13 +109,21 @@ async function validateAdminCore(context: StagedValidationContext): Promise<void
 		!shell.includes('Skip to content') ||
 		!shell.includes('Dialog.Root') ||
 		!shell.includes('lg:hidden') ||
-		!dashboard.includes('Dashboard recipe signature') ||
-		!dashboard.includes('<DashboardTable ') ||
-		settings.includes('RecipeTrace') ||
+		!dashboard.includes('<DashboardMetrics') ||
+		!dashboard.includes('<DashboardTable') ||
 		!settings.includes('Authentication') ||
 		!settings.includes('Not configured')
 	) {
-		throw new Error('The responsive workbench or Dashboard recipe signature is incomplete.');
+		throw new Error('The responsive workbench or Dashboard composition is incomplete.');
+	}
+
+	const errorRoute = await context.readFile('src/routes/+error.svelte');
+	if (
+		!errorRoute.includes("import ErrorPage from '$lib/client/ui/pages/error.svelte';") ||
+		!errorRoute.includes('<ErrorPage ') ||
+		/<(?:main|section|header|h1)\b/.test(errorRoute)
+	) {
+		throw new Error('The generated error route is not a thin page adapter.');
 	}
 
 	if (context.config.resources.users !== navigation.includes("href: '/users'")) {
