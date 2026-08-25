@@ -1,31 +1,86 @@
-# Metonia Admin
+<p align="center">
+  <img src="./docs/assets/metonia-admin-hero.svg" alt="Metonia Admin — native SvelteKit admin apps without a hidden runtime" width="100%" />
+</p>
 
-Metonia Admin is a composable generator for native Svelte 5 + SvelteKit admin applications. It produces ordinary, user-owned application code with predictable client/server boundaries, thin routes, an accessible admin shell, and configuration-aware documentation. Generated projects do not depend on a hidden Metonia runtime.
+<p align="center">
+  <a href="https://www.npmjs.com/package/create-metonia-admin"><img alt="npm version" src="https://img.shields.io/npm/v/create-metonia-admin?style=for-the-badge&logo=npm&color=CB3837" /></a>
+  <a href="https://www.npmjs.com/package/create-metonia-admin"><img alt="npm downloads" src="https://img.shields.io/npm/dm/create-metonia-admin?style=for-the-badge&color=5B8DEF" /></a>
+  <a href="./LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-42C777?style=for-the-badge" /></a>
+  <img alt="Svelte 5" src="https://img.shields.io/badge/Svelte-5-FF3E00?style=for-the-badge&logo=svelte&logoColor=white" />
+</p>
 
-The MVP includes a portable `create-metonia-admin` Node CLI, a transactional recipe generator, a shared capability registry, a CLI-generated Standard reference admin, an experimental Remote Functions playground, and a public website/configurator.
+<p align="center">
+  <strong>Generate a polished Svelte 5 + SvelteKit admin application in minutes.</strong><br />
+  Native routes. Predictable boundaries. Real database code. No proprietary runtime.
+</p>
 
-## Quick start
-
-Generate a project from the public npm release:
+## Start in one command
 
 ```bash
 npx create-metonia-admin@latest
 ```
 
-The interactive flow asks for a project name, then suggests `./<project-name>`
-relative to the current terminal directory. Enter `./` to use an empty current
-directory. `npm create metonia-admin@latest` and
-`bunx create-metonia-admin@latest` launch the same wizard.
+The interactive wizard asks only the questions that matter for your selected stack. It suggests `./<project-name>` in your current terminal directory, installs dependencies when requested, and can initialize Git for you.
 
-For local CLI development inside this Bun-first monorepo:
+Prefer another runner?
 
 ```bash
-bun install
-bun run --cwd packages/cli build
-node packages/cli/dist/create-metonia-admin.js acme-admin --yes
+bunx create-metonia-admin@latest
+npm create metonia-admin@latest
+pnpm dlx create-metonia-admin@latest
+yarn dlx create-metonia-admin@latest
 ```
 
-The interactive form asks only relevant questions. The same configuration can be automated from the registry:
+> The `npm i create-metonia-admin` command shown on npm installs the package. Use one of the runner commands above to create a project.
+
+## What you get
+
+| Surface                  | Included                                                                                                             |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| **Admin experience**     | Responsive shell, operational Dashboard, Settings, optional Users CRUD, loading/empty/error states, and a custom 404 |
+| **UI**                   | Real shadcn-svelte primitives, Nova style, and Neutral, Stone, Zinc, Mauve, Olive, Mist, or Taupe base colors        |
+| **Application boundary** | Native SvelteKit loads, form actions, thin routes, server-only repositories, and shared runtime-neutral contracts    |
+| **Data stack**           | Zod, Drizzle ORM, generic PostgreSQL, `pg`, generated migration, and `.env.example`                                  |
+| **Delivery**             | Adapter Node, optional Bun-tested Docker output, package-manager-owned commands, and configuration-aware docs        |
+| **Ownership**            | Ordinary generated source code with no required Metonia runtime or hosted control plane                              |
+
+The default Dashboard uses a generated shadcn-svelte Table through the canonical component alias. Page, view, and route ownership stays adapter-neutral so future verified UI adapters can replace primitives without forking the application architecture.
+
+## A starter you can keep
+
+Many admin starters make the first screenshot easy and every later change expensive. Metonia Admin optimizes for the codebase you own after generation:
+
+- **Native SvelteKit** — no parallel router, REST layer, tRPC/GraphQL requirement, or client query framework.
+- **Visible boundaries** — browser-safe UI cannot import database clients, secrets, or repositories.
+- **Composable generation** — recipes add real variability without a Cartesian-product template matrix.
+- **Honest capability status** — experimental and unavailable combinations fail before files are written.
+- **Agent-friendly structure** — generated `AGENTS.md`, README, config, and nearby examples explain how the project is meant to grow.
+- **Transactional output** — generation happens in private staging and publishes only after validation succeeds.
+
+## Generated architecture
+
+```text
+src/lib/
+├── client/
+│   └── ui/
+│       ├── components/   reusable UI primitives
+│       ├── views/        meaningful screen sections
+│       └── pages/        complete screen composition
+├── server/               database, repositories, services, secrets
+└── shared/               schemas, types, constants, pure utilities
+```
+
+```text
+client -> shared <- server
+pages  -> views  -> components
+routes -> client pages
+```
+
+Routes own URLs, parameters, loads, actions, and data-boundary glue. They stay thin. Client code never imports `$lib/server`.
+
+## Configure it explicitly
+
+The same wizard configuration can be automated for CI, templates, or repeatable scaffolding:
 
 ```bash
 npx create-metonia-admin@latest acme-admin \
@@ -44,93 +99,39 @@ npx create-metonia-admin@latest acme-admin \
   --no-git
 ```
 
-Use `--json` for a single versioned machine-readable result. Invalid combinations fail before a destination is written. `create-metonia-admin@0.1.3` is published on npm with the `latest` tag; clean external `npx`, `npm create`, and `bunx` invocations passed. Interactive terminals show a live activity indicator while the project is generated, dependencies are installed, and Git is initialized; JSON and non-TTY modes stay animation-free. Project staging stays outside an open destination workspace when the system temporary directory is on the same filesystem, preventing Windows editor watchers from blocking final publication.
+Add `--json` for one versioned machine-readable result. Invalid combinations fail before a destination is written.
 
-## What is generated
+## Support status
 
-The default project contains:
+Metonia Admin `0.1.x` is an early public release. The primary stack has substantial Windows x64 evidence, including fresh generation, installation, check, test, build, browser review, and real PostgreSQL behavior. Repeatable multi-OS release evidence is still in progress, so public capability labels remain intentionally conservative.
 
-- Svelte 5.56.10, SvelteKit 2.70.3, adapter-node, and Vite 8;
-- a responsive shadcn-svelte Nova admin shell with Neutral, Stone, Zinc, Mauve, Olive, Mist, and Taupe base-color choices;
-- a task-focused Dashboard with a real shadcn-svelte table, responsive loading and empty states, navigation feedback, and a custom 404 surface;
-- full PostgreSQL-backed Users CRUD and Settings;
-- Zod boundary validation, Drizzle, generic PostgreSQL, and `pg`;
-- native SvelteKit server loads and form actions;
-- migrations, `.env.example`, and explicit database scripts;
-- `metonia-admin.config.ts`, README, and a configuration-aware `AGENTS.md`;
-- optional Bun-tested Docker output.
+| Capability           | Status                                                                           |
+| -------------------- | -------------------------------------------------------------------------------- |
+| Bun, npm, pnpm, Yarn | Experimental; full primary generated graph exercised on Windows x64              |
+| shadcn-svelte Nova   | Experimental; seven deterministic base-color snapshots, with Zinc fully reviewed |
+| Standard SvelteKit   | Experimental default; generated stack and PostgreSQL Users behavior verified     |
+| Remote Functions     | Experimental query-boundary proof; Users intentionally unavailable               |
+| Docker               | Experimental and Bun-only; local non-root app + PostgreSQL path verified         |
+| Fluid UI and Deno    | Visible but unavailable until their complete integration contracts are verified  |
 
-Authentication and authorization are deliberately deferred. Generated projects state clearly that access control must be added before production use.
+Authentication and authorization are deliberately deferred. Add access control before using a generated admin application in production. See the [verification ledger](./docs/verification.md) for exact evidence and limitations.
 
-## Architecture
-
-Every SvelteKit application in this repository dogfoods the same boundary:
+## Repository map
 
 ```text
-src/lib/
-├── client/
-│   └── ui/
-│       ├── components/   reusable primitives
-│       ├── views/        screen sections
-│       └── pages/        complete screen composition
-├── server/               DB, repositories, services, secrets
-└── shared/               schemas, types, constants, pure code
+apps/
+├── reference-admin/   generated Standard reference application
+├── playground/        generated Remote Functions proof
+└── website/           product site and registry-driven configurator
+packages/
+├── cli/               published create-metonia-admin package
+├── generator/         transactional recipes and source assets
+└── registry/          typed capability catalog and compatibility rules
 ```
 
-Dependencies flow as:
+## Development
 
-```text
-client -> shared <- server
-pages -> views -> components
-routes -> client pages
-```
-
-Routes own SvelteKit parameters, loads, actions, and Remote boundaries; they do not become screen implementations. Client code never imports `$lib/server`.
-
-The generator mirrors the variable dimensions rather than maintaining a template Cartesian product:
-
-```text
-SvelteKit base
-+ architecture
-+ admin core
-+ UI adapter + owned theme
-+ data pattern
-+ validation
-+ ORM
-+ database
-+ optional Docker
-+ resources
-+ generated documents
-```
-
-## Current support surface
-
-The registry is the source of truth used by the CLI, website, generator, and tests.
-
-| Capability                                       | Current status                                                                                                                                                                                                                                     |
-| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Bun 1.4.0, npm 12.0.2, pnpm 11.23.0, Yarn 4.18.0 | Experimental; each full primary graph completed the substantive generate/install/frozen install/check/test/build commands on Windows x64, with manager-specific safety config where required. npm still has a repeat-harness Windows cleanup gate. |
-| Deno 2.9.5                                       | Unknown and fail-closed; the complete hybrid stack is unverified.                                                                                                                                                                                  |
-| shadcn-svelte Nova base colors                   | Experimental; Neutral, Stone, Zinc, Mauve, Olive, Mist, and Taupe have pinned deterministic snapshots. Zinc retains the complete generated build and responsive-review evidence; repeatable theme-specific multi-OS evidence remains pending.      |
-| Fluid UI                                         | Unknown/unavailable pending an authoritative package/API/theme contract.                                                                                                                                                                           |
-| Standard SvelteKit                               | Experimental selectable default; full generated stack and real PostgreSQL Users behavior passed on Windows.                                                                                                                                        |
-| Remote Functions                                 | Experimental upstream and in Metonia; validated query-boundary proof only, with Users disabled.                                                                                                                                                    |
-| Zod, Drizzle, generic PostgreSQL/`pg`, Users     | Experimental; generated and real PostgreSQL 17.11 behavior passed, while repeatable multi-OS release evidence remains pending.                                                                                                                     |
-| Docker                                           | Experimental and Bun-only; image, non-root runtime, PostgreSQL health wiring, HTTP request, and teardown passed locally.                                                                                                                           |
-
-This intentionally avoids turning a single-host result into a universal Stable claim. See [the verification ledger](docs/verification.md) for exact evidence and limitations.
-
-## Reference applications
-
-- `apps/reference-admin` is the CLI-generated default Standard project with Dashboard, Users, and Settings.
-- `apps/playground` is the CLI-generated experimental Remote query-boundary project.
-- `apps/website` is the public product/configurator surface and consumes the same serializable registry and resolver as the CLI.
-
-Generated application output is not repaired by hand. Regenerate it through the built CLI after recipe or registry-document changes.
-
-## Monorepo development
-
-This repository is Bun-first and has one root `bun.lock`:
+This monorepo is Bun-first and keeps one root `bun.lock`:
 
 ```bash
 bun install
@@ -139,29 +140,23 @@ bun run lint
 bun run format:check
 bun test
 bun run build
-bun run test:generator
-bun run test:integration
 ```
 
-Generated-project package managers are an independent configuration choice; they do not change the monorepo toolchain.
+Generated projects may choose Bun, npm, pnpm, or Yarn independently of the monorepo toolchain.
 
-Important documentation:
+## Documentation
 
-- [Engineering constitution](AGENTS.md)
-- [Product specification](docs/product-spec.md)
-- [MVP scope](docs/mvp-scope.md)
-- [Implementation plan](docs/implementation-plan.md)
-- [QA strategy](docs/qa-strategy.md)
-- [Architecture decisions](docs/adr/README.md)
-- [Ecosystem research](docs/research/ecosystem.md)
-- [Executed verification](docs/verification.md)
+- [Product specification](./docs/product-spec.md)
+- [Architecture decisions](./docs/adr/README.md)
+- [QA strategy](./docs/qa-strategy.md)
+- [Ecosystem research](./docs/research/ecosystem.md)
+- [Executed verification](./docs/verification.md)
+- [Engineering constitution](./AGENTS.md)
 
-## Extension points
+## Contributing
 
-New capabilities extend the registry and one focused adapter/recipe boundary. A Valibot adapter changes validation contributions; Prisma changes server persistence recipes; MySQL/SQLite add dialect branches; Neon/Supabase add provider/driver definitions; a new UI library owns its own themes and component recipe; auth and deployment targets add explicit features. None requires rewriting Dashboard views or the native SvelteKit route model.
+Issues and focused pull requests are welcome. Please read [CONTRIBUTING.md](./CONTRIBUTING.md) before changing generator contracts, generated fixtures, adapters, or release surfaces.
 
-Adding a new theme does not add a hard-coded CLI option: it becomes available when its UI adapter exposes verified theme metadata. Adding a Products resource follows the neighboring Users shared schema → server repository/service → views → page/controller → thin route pattern documented in generated `AGENTS.md`.
+## License
 
-## Roadmap
-
-The next release work is repeatable multi-OS promotion evidence, Remote Users parity if the upstream API remains suitable, authoritative Fluid UI integration, authentication/authorization, additional validated adapters, and public CLI publication. Unsupported integrations stay visible as honest future boundaries rather than fabricated implementations.
+[MIT](./LICENSE) © Metonia Admin contributors.
