@@ -297,6 +297,43 @@ describe('generateProject', () => {
 		expect(await readFile(join(destination, 'generated.txt'), 'utf8')).toBe('generated');
 	});
 
+	test('reports high-level lifecycle progress without exposing recipe-level churn', async () => {
+		const events: string[] = [];
+		const result = await generateProject(
+			{
+				config: testConfig(),
+				destination: join(await createTestRoot(), 'progress project'),
+				operations: {
+					install: { executable: 'bun', arguments: ['install'] },
+					initializeGit: { executable: 'git', arguments: ['init'] }
+				},
+				recipes: [writeRecipe('first'), writeRecipe('second')]
+			},
+			{
+				runCommand: async () => 0,
+				onProgress: ({ stage, status }) => events.push(`${status}:${stage}`)
+			}
+		);
+
+		expect(result.ok).toBeTrue();
+		expect(events).toEqual([
+			'started:validate-destination',
+			'completed:validate-destination',
+			'started:create-staging',
+			'completed:create-staging',
+			'started:run-recipes',
+			'completed:run-recipes',
+			'started:validate-staging',
+			'completed:validate-staging',
+			'started:install-dependencies',
+			'completed:install-dependencies',
+			'started:initialize-git',
+			'completed:initialize-git',
+			'started:finalize',
+			'completed:finalize'
+		]);
+	});
+
 	test('keeps same-filesystem staging outside the destination workspace', async () => {
 		const root = await createTestRoot();
 		const workspace = join(root, 'open editor workspace');

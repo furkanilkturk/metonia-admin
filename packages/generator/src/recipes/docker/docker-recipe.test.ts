@@ -12,6 +12,10 @@ import {
 } from '@metonia-admin/registry';
 
 import { generateProject } from '../../core/index.js';
+import {
+	formatPackageManagerCommand,
+	getPackageManagerAdapter
+} from '../../adapters/package-managers/index.js';
 import { createDockerRecipe } from './index.js';
 
 const temporaryRoots: string[] = [];
@@ -46,7 +50,8 @@ describe('Docker recipe', () => {
 		const dockerfile = await readFile(join(destination, 'Dockerfile'), 'utf8');
 		expect(dockerfile).toContain('COPY package.json bun.lock ./');
 		expect(dockerfile).toContain('bun install --frozen-lockfile');
-		expect(dockerfile).toContain('FROM oven/bun:1.4.0 AS production-dependencies');
+		expect(dockerfile).toContain('FROM oven/bun:1.4.0 AS package-manager');
+		expect(dockerfile).toContain('FROM package-manager AS production-dependencies');
 		expect(dockerfile).toContain('bun install --frozen-lockfile --production --ignore-scripts');
 		expect(dockerfile).toContain(
 			'COPY --from=production-dependencies --chown=node:node /app/node_modules ./node_modules'
@@ -81,20 +86,33 @@ describe('Docker recipe', () => {
 		expect(result.facts.checks).not.toContain('docker-output-contract');
 	});
 
-	test('rejects a Docker selection whose package-manager adapter has no Docker implementation', async () => {
+	test('renders npm, pnpm, and Yarn Dockerfiles from their package-manager contracts', async () => {
 		const root = await createTestRoot();
-		const destination = join(root, 'npm-docker');
-		const result = await generateProject({
-			config: dockerConfig('npm-docker', 'npm'),
-			destination,
-			recipes: [createDockerRecipe()]
-		});
+		for (const id of ['npm', 'pnpm', 'yarn'] as const) {
+			const destination = join(root, `${id}-docker`);
+			const result = await generateProject({
+				config: dockerConfig(`${id}-docker`, id),
+				destination,
+				recipes: [createDockerRecipe()]
+			});
+			expect(result.ok).toBeTrue();
+			if (!result.ok) throw new Error(JSON.stringify(result.error));
 
-		expect(result).toMatchObject({
-			ok: false,
-			error: { code: 'RECIPE_FAILED', recipeId: 'docker-container', stage: 'run-recipes' }
-		});
-		expect(await exists(destination)).toBeFalse();
+			const adapter = getPackageManagerAdapter(id);
+			const docker = adapter.docker;
+			expect(docker).toBeDefined();
+			if (docker === undefined) throw new Error(`Missing ${id} Docker plan.`);
+			const dockerfile = await readFile(join(destination, 'Dockerfile'), 'utf8');
+			expect(dockerfile).toContain(`FROM ${docker.buildImage} AS package-manager`);
+			expect(dockerfile).toContain(`COPY ${docker.dependencyFiles.join(' ')} ./`);
+			expect(dockerfile).toContain(
+				`RUN ${formatPackageManagerCommand(adapter.frozenInstallCommand)}`
+			);
+			expect(dockerfile).toContain(
+				`RUN ${formatPackageManagerCommand(docker.productionInstallCommand)}`
+			);
+			expect(result.facts.documentFacts['docker.packageManager']).toBe(id);
+		}
 	});
 
 	test('rejects a database contract that cannot use the local PostgreSQL Compose wiring', async () => {
@@ -131,15 +149,15 @@ function dockerConfig(
 		schemaVersion: 1,
 		projectName,
 		packageManager,
-		ui: { adapter: 'shadcn-svelte', theme: 'zinc' },
+		ui: { adapter: 'shadcn-svelte', theme: 'zinc', iconLibrary: 'lucide' },
 		dataPattern: 'sveltekit-standard',
 		validation: 'zod',
 		orm: 'drizzle',
 		database: { dialect: 'postgresql', provider: 'generic', driver: 'pg' },
-		docker: packageManager === 'bun' ? docker : false,
+		docker,
 		resources: { users: false }
 	});
-	return packageManager !== 'bun' && docker ? { ...config, docker: true } : config;
+	return config;
 }
 
 async function generatedFiles(root: string): Promise<string[]> {

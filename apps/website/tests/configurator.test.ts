@@ -32,6 +32,18 @@ test('website exposes all seven verified shadcn-svelte base colors as selectable
 	expect(themes.every((theme) => theme.support.integration === 'experimental')).toBeTrue();
 });
 
+test('website exposes the five shadcn-svelte icon-library choices', () => {
+	const icons = choicesFor('ui.iconLibrary', initialDraft());
+	expect(icons.map((icon) => icon.id)).toEqual([
+		'lucide',
+		'tabler',
+		'hugeicons',
+		'phosphor',
+		'remixicon'
+	]);
+	expect(icons.every((icon) => icon.selectable)).toBeTrue();
+});
+
 test('unavailable Fluid UI is visible but not selectable', () => {
 	const draft = initialDraft();
 	const fluid = choicesFor('ui.adapter', draft).find((choice) => choice.id === 'fluid-ui');
@@ -64,12 +76,11 @@ test('website resolver reports Remote Functions with Users as incompatible', () 
 	expect(result.issues.some((issue) => issue.code === 'incompatible-capabilities')).toBeTrue();
 });
 
-test('website resolver reports Docker with a non-Bun package manager as incompatible', () => {
-	const draft = initialDraft();
-	draft.packageManager = 'npm';
-	draft.docker = true;
-	const result = resolveDraft(draft);
-	expect(result.ok).toBeFalse();
-	if (result.ok) return;
-	expect(result.issues.some((issue) => issue.code === 'incompatible-capabilities')).toBeTrue();
+test('website resolver keeps Docker available for every stable package manager', () => {
+	for (const packageManager of ['bun', 'npm', 'pnpm', 'yarn']) {
+		const draft = initialDraft();
+		draft.packageManager = packageManager;
+		draft.docker = true;
+		expect(resolveDraft(draft).ok).toBeTrue();
+	}
 });

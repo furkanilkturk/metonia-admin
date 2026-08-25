@@ -12,7 +12,7 @@ export const shadcnSvelteDesignProfile = Object.freeze({
 	chartColor: 'teal',
 	font: 'source-sans-3',
 	fontHeading: 'space-grotesk',
-	iconLibrary: 'lucide',
+	presetIconLibrary: 'lucide',
 	menuAccent: 'subtle',
 	menuColor: 'default',
 	radius: 'medium',
@@ -21,7 +21,8 @@ export const shadcnSvelteDesignProfile = Object.freeze({
 
 /**
  * Pinned shadcn-svelte 1.5.0 Nova preset codes. These encode the Metonia design
- * profile: Source Sans 3, Space Grotesk headings, Lucide, medium radius, and teal charts.
+ * profile: Source Sans 3, Space Grotesk headings, the preset's Lucide default, medium radius,
+ * and teal charts. The resolved icon-library capability overrides that default during generation.
  */
 export const shadcnSvelteThemePresets = Object.freeze({
 	neutral: Object.freeze({

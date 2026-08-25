@@ -1,4 +1,9 @@
 import { assertSupportedDockerConfiguration, dockerRuntime } from '../../adapters/docker/index.js';
+import {
+	formatPackageManagerCommand,
+	getImplementedPackageManagerAdapter,
+	type PackageManagerAdapter
+} from '../../adapters/package-managers/index.js';
 import type { Recipe, StagedValidationContext } from '../../contracts/index.js';
 import { readGeneratorAsset } from '../assets.js';
 
@@ -16,12 +21,17 @@ export function createDockerRecipe(): Recipe {
 		async apply(context) {
 			if (!context.config.docker) return;
 			assertSupportedDockerConfiguration(context.config);
-			for (const file of dockerFiles) {
-				await context.writeFile(file, await readDockerAsset(file));
-			}
+			const packageManager = requireDockerPackageManager(context.config.packageManager);
+			await context.writeFile(
+				'Dockerfile',
+				renderDockerfile(await readDockerAsset('Dockerfile'), packageManager)
+			);
+			await context.writeFile('.dockerignore', await readDockerAsset('.dockerignore'));
+			await context.writeFile('compose.yaml', await readDockerAsset('compose.yaml'));
 			context.addDocumentFact({ key: 'docker.enabled', value: 'true' });
 			context.addDocumentFact({ key: 'docker.localDatabase', value: 'postgres-compose-service' });
 			context.addDocumentFact({ key: 'docker.runtime', value: dockerRuntime.nodeImage });
+			context.addDocumentFact({ key: 'docker.packageManager', value: packageManager.id });
 			context.addDocumentFact({
 				key: 'docker.setup',
 				value: 'Set POSTGRES_PASSWORD in .env before docker compose up --build.'
@@ -40,6 +50,7 @@ async function validateDockerOutput(context: StagedValidationContext): Promise<v
 	}
 
 	assertSupportedDockerConfiguration(context.config);
+	const packageManager = requireDockerPackageManager(context.config.packageManager);
 	if (!(await Promise.all(dockerFiles.map((file) => context.exists(file)))).every(Boolean)) {
 		throw new Error('Docker-enabled output is missing a required Docker source file.');
 	}
@@ -47,12 +58,16 @@ async function validateDockerOutput(context: StagedValidationContext): Promise<v
 	const [dockerfile, dockerignore, compose] = await Promise.all(
 		dockerFiles.map((file) => context.readFile(file))
 	);
+	const docker = packageManager.docker;
 	if (
-		!dockerfile.includes(`FROM ${dockerRuntime.bunImage} AS dependencies`) ||
-		!dockerfile.includes('COPY package.json bun.lock ./') ||
-		!dockerfile.includes('bun install --frozen-lockfile') ||
-		!dockerfile.includes(`FROM ${dockerRuntime.bunImage} AS production-dependencies`) ||
-		!dockerfile.includes('bun install --frozen-lockfile --production --ignore-scripts') ||
+		docker === undefined ||
+		!dockerfile.includes(`FROM ${docker.buildImage} AS package-manager`) ||
+		!dockerfile.includes(`COPY ${docker.dependencyFiles.join(' ')} ./`) ||
+		!dockerfile.includes(
+			`RUN ${formatPackageManagerCommand(packageManager.frozenInstallCommand)}`
+		) ||
+		!dockerfile.includes(`RUN ${formatPackageManagerCommand(docker.productionInstallCommand)}`) ||
+		!dockerfile.includes(`RUN ${formatPackageManagerCommand(packageManager.run('build'))}`) ||
 		!dockerfile.includes(
 			'COPY --from=production-dependencies --chown=node:node /app/node_modules ./node_modules'
 		) ||
@@ -60,14 +75,23 @@ async function validateDockerOutput(context: StagedValidationContext): Promise<v
 		!dockerfile.includes(`USER ${dockerRuntime.runtimeUser}`) ||
 		!dockerfile.includes('CMD ["node", "build"]')
 	) {
-		throw new Error('Dockerfile must use the locked Bun build and non-root Node runtime contract.');
+		throw new Error(
+			'Dockerfile must use the selected package manager lockfile and non-root Node runtime contract.'
+		);
+	}
+	for (const setupCommand of docker.setupCommands) {
+		if (!dockerfile.includes(`RUN ${formatPackageManagerCommand(setupCommand)}`)) {
+			throw new Error('Dockerfile is missing package-manager setup required by its adapter.');
+		}
 	}
 	if (
 		!dockerignore.includes('.env') ||
 		!dockerignore.includes('node_modules') ||
-		dockerignore.includes('bun.lock')
+		dockerignore.includes(packageManager.lockfile)
 	) {
-		throw new Error('Docker ignore rules must exclude local secrets while preserving bun.lock.');
+		throw new Error(
+			'Docker ignore rules must exclude local secrets while preserving the selected lockfile.'
+		);
 	}
 	if (
 		!compose.includes(`image: ${dockerRuntime.postgresImage}`) ||
@@ -93,4 +117,35 @@ async function validateDockerOutput(context: StagedValidationContext): Promise<v
 
 async function readDockerAsset(name: (typeof dockerFiles)[number]): Promise<string> {
 	return readGeneratorAsset(`docker/${name}`);
+}
+
+function requireDockerPackageManager(
+	id: Parameters<typeof getImplementedPackageManagerAdapter>[0]
+): PackageManagerAdapter {
+	const packageManager = getImplementedPackageManagerAdapter(id);
+	if (packageManager.docker === undefined) {
+		throw new Error(`Docker generation is unavailable for ${packageManager.label}.`);
+	}
+	return packageManager;
+}
+
+function renderDockerfile(template: string, packageManager: PackageManagerAdapter): string {
+	const docker = packageManager.docker;
+	if (docker === undefined) throw new Error('The package-manager Docker plan is unavailable.');
+	const setupCommands = docker.setupCommands
+		.map((command) => `RUN ${formatPackageManagerCommand(command)}`)
+		.join('\n');
+	const replacements: Readonly<Record<string, string>> = {
+		'{{BUILD_IMAGE}}': docker.buildImage,
+		'{{SETUP_COMMANDS}}': setupCommands,
+		'{{DEPENDENCY_FILES}}': docker.dependencyFiles.join(' '),
+		'{{INSTALL_COMMAND}}': formatPackageManagerCommand(packageManager.frozenInstallCommand),
+		'{{BUILD_COMMAND}}': formatPackageManagerCommand(packageManager.run('build')),
+		'{{PRODUCTION_INSTALL_COMMAND}}': formatPackageManagerCommand(docker.productionInstallCommand)
+	};
+	let output = template;
+	for (const [token, value] of Object.entries(replacements))
+		output = output.replaceAll(token, value);
+	if (/\{\{[A-Z_]+\}\}/.test(output)) throw new Error('Dockerfile template is incomplete.');
+	return output;
 }

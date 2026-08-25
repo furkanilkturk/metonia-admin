@@ -5,6 +5,8 @@ import {
 	type CapabilitySupport,
 	type DatabaseDialectDefinition,
 	type DataPatternId,
+	type IconLibraryDefinition,
+	type IconLibraryId,
 	type OrmId,
 	type PackageManagerId,
 	type ResourceId,
@@ -36,7 +38,7 @@ const packageManagers = [
 		label: 'npm',
 		description: 'Use npm for generated-project dependencies and scripts.',
 		support: pendingIntegration(
-			'The complete primary stack passed generation, install, npm ci, check, test, and build on Windows x64 with npm 12.0.2 and Node 24.19.0. A repeat harness hit a six-minute timeout during Windows cleanup; repeatable clean completion, multi-OS evidence, and recorded transitive audit findings remain release gates.'
+			'The complete primary stack passed generation, install, npm ci, check, test, and build on Windows x64 with npm 12.0.2 and Node 24.19.0; a clean repeat with npm 10.9.8 also passed every behavioral gate. Repeatable multi-OS evidence and 10 recorded transitive audit findings remain release gates.'
 		),
 		docs: [{ label: 'npm CLI', url: 'https://docs.npmjs.com/cli/' }]
 	},
@@ -83,11 +85,42 @@ function shadcnTheme(id: ThemeId): ThemeDefinition {
 		description: `Use the shadcn-svelte ${id} base color.`,
 		baseColor: id,
 		support: pendingIntegration(
-			`The checked-in shadcn-svelte ${id} Nova base-color snapshot passed deterministic generation on the primary Windows stack; repeatable multi-OS release evidence remains pending.`
+			id === 'zinc'
+				? 'The checked-in shadcn-svelte zinc Nova base-color snapshot passed deterministic generation, responsive visual review, install, check, test, and build on the primary Windows stack; repeatable multi-OS release evidence remains pending.'
+				: `The checked-in shadcn-svelte ${id} Nova base-color snapshot passed deterministic generation on the primary Windows stack; repeatable multi-OS release evidence remains pending.`
 		),
 		docs: [{ label: 'shadcn-svelte theming', url: 'https://www.shadcn-svelte.com/docs/theming' }]
 	};
 }
+
+function shadcnIconLibrary(
+	id: IconLibraryId,
+	label: string,
+	packageNames: string
+): IconLibraryDefinition {
+	return {
+		id,
+		label,
+		description: `Use ${label} icons in the generated shell and future shadcn-svelte components (${packageNames}).`,
+		support: pendingIntegration(
+			`The shadcn-svelte ${label} icon-library contract passed deterministic generation plus generated-project install, check, test, and build on Windows x64; repeatable multi-OS evidence remains pending.`
+		),
+		docs: [
+			{
+				label: 'shadcn-svelte icon library configuration',
+				url: 'https://www.shadcn-svelte.com/docs/components-json'
+			}
+		]
+	};
+}
+
+const shadcnIconLibraries = [
+	shadcnIconLibrary('lucide', 'Lucide', '@lucide/svelte'),
+	shadcnIconLibrary('tabler', 'Tabler', '@tabler/icons-svelte'),
+	shadcnIconLibrary('hugeicons', 'HugeIcons', '@hugeicons/svelte + @hugeicons/core-free-icons'),
+	shadcnIconLibrary('phosphor', 'Phosphor', 'phosphor-svelte'),
+	shadcnIconLibrary('remixicon', 'Remix Icon', 'remixicon-svelte')
+] as const;
 
 const uiAdapters: readonly UiAdapterDefinition[] = [
 	{
@@ -109,7 +142,8 @@ const uiAdapters: readonly UiAdapterDefinition[] = [
 			shadcnTheme('olive'),
 			shadcnTheme('mist'),
 			shadcnTheme('taupe')
-		]
+		],
+		iconLibraries: shadcnIconLibraries
 	},
 	{
 		id: 'fluid-ui',
@@ -131,7 +165,8 @@ const uiAdapters: readonly UiAdapterDefinition[] = [
 				url: 'https://fluidui.io/documentation/getting-started'
 			}
 		],
-		themes: []
+		themes: [],
+		iconLibraries: []
 	}
 ];
 
@@ -233,7 +268,7 @@ const docker: ToggleCapabilityDefinition<'docker'> = {
 	description: 'Generate optional application container support.',
 	defaultEnabled: false,
 	support: pendingIntegration(
-		'Docker output passed a clean multi-stage image build, non-root Node runtime, PostgreSQL 17.11 health wiring, HTTP request, and disposable shutdown proof with the Bun stack; repeatable CI evidence remains pending.'
+		'Docker output passed a clean multi-stage image build, non-root Node runtime, PostgreSQL 17.11 health wiring, HTTP request, and disposable shutdown proof with the Bun stack. Bun, npm, pnpm, and Yarn lock-aware plans passed structural generation tests; non-Bun container runtime and repeatable CI evidence remain pending.'
 	),
 	docs: [
 		{
@@ -269,7 +304,11 @@ export interface CapabilityRegistry {
 	readonly resources: readonly ToggleCapabilityDefinition<ResourceId>[];
 	readonly defaults: {
 		readonly packageManager: PackageManagerId;
-		readonly ui: { readonly adapter: UiAdapterId; readonly theme: ThemeId };
+		readonly ui: {
+			readonly adapter: UiAdapterId;
+			readonly theme: ThemeId;
+			readonly iconLibrary: IconLibraryId;
+		};
 		readonly dataPattern: DataPatternId;
 		readonly validation: ValidationId;
 		readonly orm: OrmId;
@@ -296,7 +335,7 @@ export const capabilityRegistry: CapabilityRegistry = {
 	resources,
 	defaults: {
 		packageManager: 'bun',
-		ui: { adapter: 'shadcn-svelte', theme: 'zinc' },
+		ui: { adapter: 'shadcn-svelte', theme: 'zinc', iconLibrary: 'lucide' },
 		dataPattern: 'sveltekit-standard',
 		validation: 'zod',
 		orm: 'drizzle',
@@ -319,6 +358,10 @@ export function getUiAdapter(id: string) {
 
 export function getThemesForUi(id: string): readonly ThemeDefinition[] {
 	return getUiAdapter(id)?.themes ?? [];
+}
+
+export function getIconLibrariesForUi(id: string): readonly IconLibraryDefinition[] {
+	return getUiAdapter(id)?.iconLibraries ?? [];
 }
 
 export function getDatabaseDialect(id: string) {

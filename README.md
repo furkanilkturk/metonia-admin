@@ -38,7 +38,7 @@ yarn dlx create-metonia-admin@latest
 | Surface                  | Included                                                                                                             |
 | ------------------------ | -------------------------------------------------------------------------------------------------------------------- |
 | **Admin experience**     | Responsive shell, operational Dashboard, Settings, optional Users CRUD, loading/empty/error states, and a custom 404 |
-| **UI**                   | Real shadcn-svelte primitives, Nova style, and Neutral, Stone, Zinc, Mauve, Olive, Mist, or Taupe base colors        |
+| **UI**                   | Real shadcn-svelte primitives, seven Nova base colors, and Lucide, Tabler, HugeIcons, Phosphor, or Remix icons       |
 | **Application boundary** | Native SvelteKit loads, form actions, thin routes, server-only repositories, and shared runtime-neutral contracts    |
 | **Data stack**           | Zod, Drizzle ORM, generic PostgreSQL, `pg`, generated migration, and `.env.example`                                  |
 | **Delivery**             | Adapter Node, optional Bun-tested Docker output, package-manager-owned commands, and configuration-aware docs        |
@@ -87,6 +87,7 @@ npx create-metonia-admin@latest acme-admin \
   --package-manager bun \
   --ui shadcn-svelte \
   --theme zinc \
+  --icon-library lucide \
   --data-pattern standard \
   --validation zod \
   --orm drizzle \
@@ -105,14 +106,15 @@ Add `--json` for one versioned machine-readable result. Invalid combinations fai
 
 Metonia Admin `0.1.x` is an early public release. The primary stack has substantial Windows x64 evidence, including fresh generation, installation, check, test, build, browser review, and real PostgreSQL behavior. Repeatable multi-OS release evidence is still in progress, so public capability labels remain intentionally conservative.
 
-| Capability           | Status                                                                           |
-| -------------------- | -------------------------------------------------------------------------------- |
-| Bun, npm, pnpm, Yarn | Experimental; full primary generated graph exercised on Windows x64              |
-| shadcn-svelte Nova   | Experimental; seven deterministic base-color snapshots, with Zinc fully reviewed |
-| Standard SvelteKit   | Experimental default; generated stack and PostgreSQL Users behavior verified     |
-| Remote Functions     | Experimental query-boundary proof; Users intentionally unavailable               |
-| Docker               | Experimental and Bun-only; local non-root app + PostgreSQL path verified         |
-| Fluid UI and Deno    | Visible but unavailable until their complete integration contracts are verified  |
+| Capability                   | Status                                                                                   |
+| ---------------------------- | ---------------------------------------------------------------------------------------- |
+| Bun, npm, pnpm, Yarn         | Experimental; full primary generated graph exercised on Windows x64                      |
+| shadcn-svelte Nova           | Experimental; seven deterministic base-color snapshots, with Zinc fully reviewed         |
+| Five shadcn-svelte icon sets | Experimental; every generated icon adapter passed install, check, test, and build        |
+| Standard SvelteKit           | Experimental default; generated stack and PostgreSQL Users behavior verified             |
+| Remote Functions             | Experimental query-boundary proof; Users intentionally unavailable                       |
+| Docker                       | Experimental; Bun runtime verified, npm/pnpm/Yarn lock-aware plans structurally verified |
+| Fluid UI and Deno            | Visible but unavailable until their complete integration contracts are verified          |
 
 Authentication and authorization are deliberately deferred. Add access control before using a generated admin application in production. See the [verification ledger](./docs/verification.md) for exact evidence and limitations.
 

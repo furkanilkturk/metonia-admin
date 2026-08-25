@@ -15,6 +15,7 @@
 	let result = $derived(resolveDraft(draft));
 	let config = $derived(result.ok ? result.config : undefined);
 	let themeChoices = $derived(choicesFor('ui.theme', draft));
+	let iconLibraryChoices = $derived(choicesFor('ui.iconLibrary', draft));
 	let providerChoices = $derived(choicesFor('database.provider', draft));
 	let driverChoices = $derived(choicesFor('database.driver', draft));
 
@@ -22,6 +23,8 @@
 		draft[key] = value;
 		if (key === 'uiAdapter') {
 			draft.uiTheme = choicesFor('ui.theme', draft).find((choice) => choice.selectable)?.id ?? '';
+			draft.iconLibrary =
+				choicesFor('ui.iconLibrary', draft).find((choice) => choice.selectable)?.id ?? '';
 		}
 		if (key === 'dialect') {
 			draft.provider =
@@ -89,7 +92,7 @@
 					<section class="node client-node">
 						<span>browser-safe</span>
 						<strong>$lib/client/ui</strong>
-						<code>{draft.uiAdapter} / {draft.uiTheme}</code>
+						<code>{draft.uiAdapter} / {draft.uiTheme} / {draft.iconLibrary}</code>
 						<small>components → views → pages</small>
 					</section>
 					<section class="node shared-node">
@@ -217,6 +220,14 @@
 					value={draft.uiTheme}
 					options={themeChoices}
 					onchange={(value) => update('uiTheme', value)}
+				/>
+				<ChoiceField
+					id="icon-library"
+					label="Icon library"
+					description="Uses the icon families supported by shadcn-svelte."
+					value={draft.iconLibrary}
+					options={iconLibraryChoices}
+					onchange={(value) => update('iconLibrary', value)}
 				/>
 			</fieldset>
 

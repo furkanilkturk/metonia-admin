@@ -15,6 +15,8 @@ const defaultFlagArguments = [
 	'shadcn-svelte',
 	'--theme',
 	'zinc',
+	'--icon-library',
+	'lucide',
 	'--data-pattern',
 	'standard',
 	'--validation',
@@ -102,6 +104,7 @@ describe('runCli', () => {
 				'bun',
 				'shadcn-svelte',
 				'zinc',
+				'lucide',
 				'sveltekit-standard',
 				'zod',
 				'drizzle',
@@ -136,6 +139,7 @@ describe('runCli', () => {
 				'bun',
 				'shadcn-svelte',
 				'zinc',
+				'lucide',
 				'sveltekit-standard',
 				'zod',
 				'drizzle',
@@ -181,6 +185,7 @@ describe('runCli', () => {
 					'bun',
 					'shadcn-svelte',
 					'zinc',
+					'lucide',
 					'remote-functions',
 					'zod',
 					'drizzle',
@@ -297,6 +302,7 @@ describe('runCli', () => {
 					'bun',
 					'shadcn-svelte',
 					'zinc',
+					'lucide',
 					'sveltekit-standard',
 					'zod',
 					'drizzle',
@@ -335,6 +341,7 @@ describe('runCli', () => {
 				'bun',
 				'shadcn-svelte',
 				'zinc',
+				'lucide',
 				'sveltekit-standard',
 				'zod',
 				'drizzle',
@@ -392,7 +399,7 @@ describe('runCli', () => {
 
 		expect(success.exitCode).toBe(0);
 		expect(successEvents).toEqual([
-			'start:Creating project, installing dependencies, and initializing Git',
+			'start:Preparing generation plan',
 			'stop:Project generated successfully'
 		]);
 
@@ -423,8 +430,45 @@ describe('runCli', () => {
 
 		expect(failure.exitCode).toBe(2);
 		expect(failureEvents).toEqual([
-			'start:Creating project, installing dependencies, and initializing Git',
-			'error:Project generation failed'
+			'start:Preparing generation plan',
+			'error:Project generation failed: Moving the completed project into place'
+		]);
+	});
+
+	test('reports distinct generation stages without duplicate activity messages', async () => {
+		const events: string[] = [];
+		const output = io({ activity: recordingActivity(events), interactive: true });
+		const run = await runCli(['progress-admin', '--yes', '--package-manager', 'npm'], {
+			io: output.io,
+			generate: async (request, dependencies) => {
+				for (const stage of [
+					'resolve-plan',
+					'validate-destination',
+					'create-staging',
+					'run-recipes',
+					'validate-staging',
+					'install-dependencies',
+					'initialize-git',
+					'finalize'
+				] as const) {
+					dependencies?.onProgress?.({ stage, status: 'started' });
+					dependencies?.onProgress?.({ stage, status: 'completed' });
+				}
+				return successfulGeneration(request);
+			}
+		});
+
+		expect(run.exitCode).toBe(0);
+		expect(events).toEqual([
+			'start:Preparing generation plan',
+			'message:Checking project destination',
+			'message:Preparing a safe temporary workspace',
+			'message:Generating application files',
+			'message:Validating the generated project',
+			'message:Installing dependencies with npm',
+			'message:Initializing the Git repository',
+			'message:Moving the completed project into place',
+			'stop:Project generated successfully'
 		]);
 	});
 
@@ -455,6 +499,7 @@ describe('runCli', () => {
 function recordingActivity(events: string[]): CliActivityIndicator {
 	return {
 		start: (message) => events.push(`start:${message}`),
+		message: (message) => events.push(`message:${message}`),
 		stop: (message) => events.push(`stop:${message}`),
 		error: (message) => events.push(`error:${message}`)
 	};

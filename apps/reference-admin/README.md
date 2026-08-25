@@ -13,7 +13,7 @@ ordinary application code owned by this project; it does not require a Metonia r
 - Svelte: `5.56.10`
 - SvelteKit: `2.70.3`
 - Deployment adapter: `@sveltejs/adapter-node@5.5.7`
-- UI: `shadcn-svelte` with the `zinc` theme, installed under `src/lib/client/ui/components`
+- UI: `shadcn-svelte` with the `zinc` theme and `lucide` icons, installed under `src/lib/client/ui/components`
 - Data boundary: `sveltekit-standard`
 - Validation: `zod`
 - Persistence: `drizzle` with `postgresql` / `generic` / `pg`
@@ -79,6 +79,7 @@ The resolved configuration is captured as an import-free literal in `metonia-adm
 - The complete primary stack passed generation, install, frozen install, check, test, and build on Windows x64 with Bun 1.4.0 and Node 24.19.0; repeatable multi-OS release evidence remains pending.
 - The shadcn-svelte Nova adapter targeting $lib/client/ui/components passed deterministic generation, Svelte autofix, responsive visual review, install, check, test, and build on the primary Windows stack; multi-OS release evidence remains pending.
 - The checked-in shadcn-svelte zinc Nova base-color snapshot passed deterministic generation on the primary Windows stack; repeatable multi-OS release evidence remains pending.
+- The shadcn-svelte Lucide icon-library contract is implemented and generated-project validation is required before release; repeatable multi-OS evidence remains pending.
 - The Standard SvelteKit load/action path passed a fresh default-stack install/check/test/build and real PostgreSQL Users CRUD on Windows; repeatable multi-OS release evidence remains pending.
 - The Zod adapter passed generated-project validation, check/test/build, and real Users mutation tests on Windows; repeatable multi-OS release evidence remains pending.
 - The Drizzle adapter passed generated migration checks and real PostgreSQL Users repository/service runtime tests on Windows; repeatable multi-OS release evidence remains pending.

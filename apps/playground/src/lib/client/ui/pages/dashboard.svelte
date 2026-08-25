@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Button } from '$lib/client/ui/components/button/index.js';
+	import AppIcon from '$lib/client/ui/components/app-icon.svelte';
 	import { DashboardController } from '$lib/client/ui/pages/dashboard/dashboardController.js';
 	import { DashboardState } from '$lib/client/ui/pages/dashboard/dashboardState.svelte.js';
 	import DashboardActivity from '$lib/client/ui/views/dashboard/dashboardActivity.svelte';
@@ -11,8 +12,6 @@
 		DashboardMetric,
 		DashboardOperation
 	} from '$lib/shared/types/dashboard.js';
-	import ArrowUpRightIcon from '@lucide/svelte/icons/arrow-up-right';
-	import CircleCheckIcon from '@lucide/svelte/icons/circle-check-big';
 
 	const operations: readonly DashboardOperation[] = [
 		{
@@ -121,30 +120,30 @@
 	/>
 </svelte:head>
 
-<div class="mx-auto grid w-full max-w-[90rem] gap-6 lg:gap-7">
-	<header class="grid gap-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+<div class="mx-auto grid w-full max-w-[86rem] gap-5 lg:gap-6">
+	<header class="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
 		<div class="min-w-0">
-			<div class="mb-3 flex items-center gap-2 text-sm font-medium text-success">
-				<CircleCheckIcon class="size-4" aria-hidden="true" />
+			<div class="mb-2 flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-[0.08em] text-success">
+				<AppIcon name="circle-check" class="size-4" aria-hidden="true" />
 				<span>Workspace is healthy</span>
 			</div>
-			<h1 class="max-w-3xl text-balance font-heading text-3xl font-semibold tracking-[-0.035em] sm:text-4xl lg:text-[2.75rem] lg:leading-[1.05]">
+			<h1 class="max-w-3xl text-balance font-heading text-3xl font-semibold tracking-[-0.035em] sm:text-[2.35rem] sm:leading-tight">
 				Keep today’s work moving.
 			</h1>
-			<p class="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">
+			<p class="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
 				Monitor active workflows, resolve exceptions, and hand off the next action without losing context.
 			</p>
 		</div>
 		<Button href="/settings" class="h-11 w-fit gap-2 px-4 sm:h-10">
 			Configure workspace
-			<ArrowUpRightIcon data-icon="inline-end" aria-hidden="true" />
+			<AppIcon name="arrow-up-right" data-icon="inline-end" aria-hidden="true" />
 		</Button>
 	</header>
 
 	<DashboardMetrics {metrics} />
 
-	<div class="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_21rem]">
-		<section class="min-w-0 overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/10" aria-labelledby="operations-heading">
+	<div class="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_20rem]">
+		<section class="min-w-0 overflow-hidden rounded-xl border border-border bg-card shadow-sm" aria-labelledby="operations-heading">
 			<DashboardFilter
 				activeFilterCount={state.activeFilterCount}
 				isLoading={state.isLoading}

@@ -2,6 +2,8 @@ import type { ThemeId } from '@metonia-admin/registry';
 
 import {
 	getShadcnSvelteThemePreset,
+	getShadcnIconLibraryDependencies,
+	renderAppIcon,
 	shadcnSvelteDependencies,
 	shadcnSvelteDevDependencies
 } from '../../../adapters/ui/shadcn-svelte/index.js';
@@ -50,6 +52,11 @@ const componentSnapshotFiles = Object.freeze([
 	'dropdown-menu/index.ts',
 	'input/index.ts',
 	'input/input.svelte',
+	'select/index.ts',
+	'select/select-content.svelte',
+	'select/select-item.svelte',
+	'select/select-trigger.svelte',
+	'select/select.svelte',
 	'table/index.ts',
 	'table/table-body.svelte',
 	'table/table-caption.svelte',
@@ -78,13 +85,19 @@ export function createShadcnSvelteUiRecipe(): Recipe {
 				);
 			}
 			await context.writeFile(
+				`${componentRoot}/app-icon.svelte`,
+				renderAppIcon(context.config.ui.iconLibrary)
+			);
+			await context.writeFile(
 				'src/lib/client/utils/index.ts',
 				await readUiAsset('src/lib/client/utils/index.ts')
 			);
 			await context.ensureDirectory('src/lib/client/hooks');
 			await context.writeFile(
 				'components.json',
-				(await readUiAsset('components.json')).replace('__SHADCN_BASE_COLOR__', preset.baseColor)
+				(await readUiAsset('components.json'))
+					.replace('__SHADCN_BASE_COLOR__', preset.baseColor)
+					.replace('__SHADCN_ICON_LIBRARY__', context.config.ui.iconLibrary)
 			);
 			await context.writeFile(
 				'src/routes/+layout.svelte',
@@ -95,6 +108,10 @@ export function createShadcnSvelteUiRecipe(): Recipe {
 
 			context.addDocumentFact({ key: 'ui.shadcn.preset', value: preset.presetCode });
 			context.addDocumentFact({ key: 'ui.shadcn.style', value: 'nova' });
+			context.addDocumentFact({
+				key: 'ui.shadcn.iconLibrary',
+				value: context.config.ui.iconLibrary
+			});
 			context.addCheck({ id: 'shadcn-svelte-adapter', validate: validateShadcnAdapter });
 		}
 	};
@@ -125,10 +142,12 @@ function assertShadcnSelection(context: RecipeContext): void {
 }
 
 async function mergePackageManifest(context: RecipeContext): Promise<void> {
+	const iconDependencies = getShadcnIconLibraryDependencies(context.config.ui.iconLibrary);
 	const manifest = parseJsonObject(await context.readFile('package.json'));
 	manifest.dependencies = sortedRecord({
 		...getStringRecord(manifest.dependencies),
-		...shadcnSvelteDependencies
+		...shadcnSvelteDependencies,
+		...iconDependencies
 	});
 	manifest.devDependencies = sortedRecord({
 		...getStringRecord(manifest.devDependencies),
@@ -137,6 +156,9 @@ async function mergePackageManifest(context: RecipeContext): Promise<void> {
 	await context.writeFile('package.json', `${JSON.stringify(manifest, null, '\t')}\n`);
 
 	for (const [name, version] of Object.entries(shadcnSvelteDependencies)) {
+		context.addDependency({ kind: 'dependencies', name, version });
+	}
+	for (const [name, version] of Object.entries(iconDependencies)) {
 		context.addDependency({ kind: 'dependencies', name, version });
 	}
 	for (const [name, version] of Object.entries(shadcnSvelteDevDependencies)) {
@@ -166,7 +188,7 @@ async function validateShadcnAdapter(context: StagedValidationContext): Promise<
 		aliases.utils !== '$lib/client/utils' ||
 		tailwind.baseColor !== preset.baseColor ||
 		components.style !== 'nova' ||
-		components.iconLibrary !== 'lucide'
+		components.iconLibrary !== context.config.ui.iconLibrary
 	) {
 		throw new Error('The shadcn-svelte adapter configuration does not match the pinned snapshot.');
 	}
@@ -180,6 +202,8 @@ async function validateShadcnAdapter(context: StagedValidationContext): Promise<
 		`${componentRoot}/dialog/dialog-content.svelte`,
 		`${componentRoot}/dropdown-menu/dropdown-menu-content.svelte`,
 		`${componentRoot}/input/input.svelte`,
+		`${componentRoot}/select/select.svelte`,
+		`${componentRoot}/app-icon.svelte`,
 		`${componentRoot}/table/table.svelte`,
 		'src/lib/client/utils/index.ts',
 		'src/routes/+layout.svelte'
@@ -205,10 +229,12 @@ async function validateShadcnAdapter(context: StagedValidationContext): Promise<
 	const packageJson = parseJsonObject(await context.readFile('package.json'));
 	const dependencies = getStringRecord(packageJson.dependencies);
 	const devDependencies = getStringRecord(packageJson.devDependencies);
+	const iconDependencies = getShadcnIconLibraryDependencies(context.config.ui.iconLibrary);
 	if (
 		Object.entries(shadcnSvelteDependencies).some(
 			([name, version]) => dependencies[name] !== version
 		) ||
+		Object.entries(iconDependencies).some(([name, version]) => dependencies[name] !== version) ||
 		Object.entries(shadcnSvelteDevDependencies).some(
 			([name, version]) => devDependencies[name] !== version
 		)
@@ -341,7 +367,7 @@ function darkTheme(snapshot: BaseColorSnapshot): readonly (readonly [string, str
 		...chartTheme(),
 		['sidebar', snapshot.primary],
 		['sidebar-foreground', snapshot.primaryForeground],
-		['sidebar-primary', 'oklch(0.488 0.243 264.376)'],
+		['sidebar-primary', '#45c4bb'],
 		['sidebar-primary-foreground', snapshot.primaryForeground],
 		['sidebar-accent', snapshot.darkSecondary],
 		['sidebar-accent-foreground', snapshot.primaryForeground],

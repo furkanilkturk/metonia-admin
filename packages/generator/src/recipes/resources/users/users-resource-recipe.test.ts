@@ -402,7 +402,7 @@ function usersConfig(enabled = true): ResolvedConfig {
 		schemaVersion: 1,
 		projectName: 'users-proof',
 		packageManager: 'bun',
-		ui: { adapter: 'shadcn-svelte', theme: 'zinc' },
+		ui: { adapter: 'shadcn-svelte', theme: 'zinc', iconLibrary: 'lucide' },
 		dataPattern: 'sveltekit-standard',
 		validation: 'zod',
 		orm: 'drizzle',

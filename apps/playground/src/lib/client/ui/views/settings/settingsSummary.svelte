@@ -1,7 +1,6 @@
 <script lang="ts">
 	import * as Card from '$lib/client/ui/components/card/index.js';
-	import CircleAlertIcon from '@lucide/svelte/icons/circle-alert';
-	import CircleCheckIcon from '@lucide/svelte/icons/circle-check-big';
+	import AppIcon from '$lib/client/ui/components/app-icon.svelte';
 
 	interface SettingSummary {
 		detail: string;
@@ -35,11 +34,11 @@
 	<Card.Footer class="border-t border-border">
 		<div class="grid gap-3 text-sm sm:grid-cols-2">
 			<div class="flex gap-2 rounded-lg bg-primary/10 p-3 text-primary">
-				<CircleCheckIcon class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+				<AppIcon name="circle-check" class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
 				<p>UI and application boundaries are generated as ordinary SvelteKit source.</p>
 			</div>
 			<div class="flex gap-2 rounded-lg bg-signal/10 p-3 text-signal">
-				<CircleAlertIcon class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+				<AppIcon name="circle-alert" class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
 				<p>Authentication and authorization are intentionally not configured.</p>
 			</div>
 		</div>

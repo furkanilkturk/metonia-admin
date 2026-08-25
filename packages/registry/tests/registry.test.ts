@@ -20,6 +20,7 @@ function allDefinitions(): CapabilityDefinition[] {
 		...capabilityRegistry.packageManagers,
 		...capabilityRegistry.uiAdapters,
 		...capabilityRegistry.uiAdapters.flatMap((adapter) => adapter.themes),
+		...capabilityRegistry.uiAdapters.flatMap((adapter) => adapter.iconLibraries),
 		...capabilityRegistry.dataPatterns,
 		...capabilityRegistry.validations,
 		...capabilityRegistry.orms,
@@ -110,6 +111,12 @@ describe('capability registry', () => {
 		expect(
 			getConditionalChoices('ui.theme', { projectName: 'admin', ui: { adapter: 'fluid-ui' } })
 		).toEqual([]);
+		expect(
+			getConditionalChoices('ui.iconLibrary', {
+				projectName: 'admin',
+				ui: { adapter: 'shadcn-svelte' }
+			}).map(({ id }) => id)
+		).toEqual(['lucide', 'tabler', 'hugeicons', 'phosphor', 'remixicon']);
 		expect(getConditionalChoices('ui.adapter').map(({ id }) => id)).toEqual(['shadcn-svelte']);
 		expect(
 			getConditionalChoices('ui.adapter', {}, { includeUnavailable: true }).map(({ id }) => id)
@@ -128,6 +135,7 @@ describe('capability registry', () => {
 	test('exposes a JSON-serializable catalog without losing nested ownership', () => {
 		const catalog = JSON.parse(JSON.stringify(configuratorCatalog)) as typeof configuratorCatalog;
 		expect(catalog.uiAdapters[0]?.themes.map(({ id }) => id)).toContain('zinc');
+		expect(catalog.uiAdapters[0]?.iconLibraries.map(({ id }) => id)).toContain('tabler');
 		expect(catalog.databaseDialects[0]?.providers[0]?.drivers[0]?.id).toBe('pg');
 		expect(catalog.uiAdapters.find(({ id }) => id === 'fluid-ui')?.selectable).toBe(false);
 	});
@@ -146,7 +154,7 @@ describe('configuration resolution', () => {
 			schemaVersion: 1,
 			project: { name: 'acme-admin' },
 			packageManager: 'bun',
-			ui: { library: 'shadcn-svelte', theme: 'zinc' },
+			ui: { library: 'shadcn-svelte', theme: 'zinc', iconLibrary: 'lucide' },
 			dataPattern: 'sveltekit-standard',
 			validation: { library: 'zod' },
 			database: {
@@ -162,6 +170,7 @@ describe('configuration resolution', () => {
 			'packageManager',
 			'ui.adapter',
 			'ui.theme',
+			'ui.iconLibrary',
 			'dataPattern',
 			'validation',
 			'orm',
@@ -236,12 +245,7 @@ describe('configuration resolution', () => {
 			packageManager: 'npm',
 			docker: true
 		});
-		expect(npmDocker.ok).toBeFalse();
-		expect(
-			npmDocker.issues.some(
-				({ code, path }) => code === 'incompatible-capabilities' && path === 'docker'
-			)
-		).toBeTrue();
+		expect(npmDocker.ok).toBeTrue();
 	});
 
 	test('validates ownership independently for already-resolved-looking input', () => {
@@ -249,7 +253,7 @@ describe('configuration resolution', () => {
 			schemaVersion: 1,
 			projectName: 'admin',
 			packageManager: 'bun',
-			ui: { adapter: 'fluid-ui', theme: 'zinc' },
+			ui: { adapter: 'fluid-ui', theme: 'zinc', iconLibrary: 'lucide' },
 			dataPattern: 'sveltekit-standard',
 			validation: 'zod',
 			orm: 'drizzle',
@@ -267,7 +271,7 @@ describe('configuration resolution', () => {
 			schemaVersion: 1,
 			projectName: 'admin',
 			packageManager: 'pnpm',
-			ui: { adapter: 'shadcn-svelte', theme: 'zinc' },
+			ui: { adapter: 'shadcn-svelte', theme: 'zinc', iconLibrary: 'tabler' },
 			dataPattern: 'sveltekit-remote-functions',
 			validation: 'zod',
 			orm: 'drizzle',
@@ -308,7 +312,7 @@ describe('configuration resolution', () => {
 				schemaVersion: 1,
 				project: { name: 'admin' },
 				packageManager: 'bun',
-				ui: { library: 'shadcn-svelte', theme: 'zinc' },
+				ui: { library: 'shadcn-svelte', theme: 'zinc', iconLibrary: 'lucide' },
 				dataPattern: 'sveltekit-standard',
 				validation: { library: 'zod' },
 				database: {

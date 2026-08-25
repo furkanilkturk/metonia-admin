@@ -203,6 +203,12 @@ Setting only `components` is insufficient: registry UI primitives use the dedica
 
 Themes belong to the shadcn adapter. Store the selected stable Metonia theme ID separately from the upstream base color or opaque preset code, resolve it through the typed registry, and fail invalid cross-adapter combinations before writing files.
 
+### shadcn-svelte icon libraries (verified 2026-08-25)
+
+The pinned `shadcn-svelte@1.5.0` schema and preset API expose exactly five icon-library IDs: `lucide`, `tabler`, `hugeicons`, `phosphor`, and `remixicon`. The current [components.json documentation](https://www.shadcn-svelte.com/docs/components-json) defines `iconLibrary` as the project-level choice used when registry components are generated. Metonia therefore stores the selected ID under the shadcn adapter, writes it to `components.json`, installs only its required icon package or packages, and renders the generated shell through a semantic icon adapter. This avoids leaving the starter on Lucide while later `shadcn-svelte add` commands use another family.
+
+The operational filters use the current [shadcn-svelte Select](https://www.shadcn-svelte.com/docs/components/select) contract instead of raw browser selects, so the trigger, popup, focus state, and selected indicator share the generated design tokens. Native selects remain appropriate for simple form fields where platform-native mobile behavior is preferable.
+
 ## Fluid UI: public candidate found, intended integration still unverified
 
 Research found a public package named [`fluid-ui-svelte@0.3.5`](https://registry.npmjs.org/fluid-ui-svelte/0.3.5), a linked [GitHub repository](https://github.com/ayazemre/fluid-ui-svelte), and [documentation](https://fluidui.io/documentation/getting-started). Those sources describe a Svelte 5 library with `fluid-ui-svelte`, `fluid-ui-svelte/base`, and `fluid-ui-svelte/components` exports and a separate stylesheet.
@@ -247,9 +253,9 @@ The support gate must exercise the packed/published artifact—not a TypeScript 
 
 ### Generated-project package-manager safety configuration
 
-Current manager defaults require project-owned policy rather than ambient machine configuration. pnpm 11’s [`strictDepBuilds`](https://pnpm.io/settings/build#strictdepbuilds) defaults to true and rejects unreviewed dependency build scripts. Its documented [`allowBuilds`](https://pnpm.io/settings/build#allowbuilds) map is the narrow review mechanism, so the generated pnpm project owns a `pnpm-workspace.yaml` that approves `esbuild` rather than disabling script checks globally. The same file records exact current `@lucide/svelte@1.34.0` in [`minimumReleaseAgeExclude`](https://pnpm.io/settings/dependency-resolution#minimumreleaseageexclude), preventing the first install from silently mutating project policy while leaving the age gate in force for other releases.
+Current manager defaults require project-owned policy rather than ambient machine configuration. pnpm 11’s [`strictDepBuilds`](https://pnpm.io/settings/build#strictdepbuilds) defaults to true and rejects unreviewed dependency build scripts. Its documented [`allowBuilds`](https://pnpm.io/settings/build#allowbuilds) map is the narrow review mechanism, so the generated pnpm project owns a `pnpm-workspace.yaml` that approves `esbuild` rather than disabling script checks globally. The same file records only the exact icon-package versions supported by the shadcn adapter in [`minimumReleaseAgeExclude`](https://pnpm.io/settings/dependency-resolution#minimumreleaseageexclude), preventing the first install from silently mutating project policy while leaving the age gate in force for other releases.
 
-Yarn 4’s [security guidance](https://yarnpkg.com/features/security) documents its default npm release-age gate and the [`npmPreapprovedPackages`](https://yarnpkg.com/configuration/yarnrc#npmPreapprovedPackages) escape hatch. Because the pinned current `@lucide/svelte@1.34.0` release was inside that gate on the verification date, the generated `.yarnrc.yml` preapproves that exact descriptor only. An empty local `yarn.lock` is also written before the first install so Yarn does not capture an unrelated ancestor project. These are adapter-owned generated-project files; they are not monorepo lockfiles or global configuration.
+Yarn 4’s [security guidance](https://yarnpkg.com/features/security) documents its default npm release-age gate and the [`npmPreapprovedPackages`](https://yarnpkg.com/configuration/yarnrc#npmPreapprovedPackages) escape hatch. The generated `.yarnrc.yml` preapproves only the exact supported icon-package descriptors; packages not selected are not installed. An empty local `yarn.lock` is also written before the first install so Yarn does not capture an unrelated ancestor project. These are adapter-owned generated-project files; they are not monorepo lockfiles or global configuration.
 
 ## Deno viability without overclaiming
 

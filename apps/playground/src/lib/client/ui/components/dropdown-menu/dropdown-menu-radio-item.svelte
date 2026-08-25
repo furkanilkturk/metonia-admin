@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { DropdownMenu as DropdownMenuPrimitive } from "bits-ui";
-	import CheckIcon from '@lucide/svelte/icons/check';
+	import AppIcon from '$lib/client/ui/components/app-icon.svelte';
 	import { cn, type WithoutChild } from "$lib/client/utils/index.js";
 
 	let {
@@ -26,10 +26,9 @@
 			data-slot="dropdown-menu-radio-item-indicator"
 		>
 			{#if checked}
-				<CheckIcon  />
+				<AppIcon name="check" />
 			{/if}
 		</span>
 		{@render childrenProp?.({ checked })}
 	{/snippet}
 </DropdownMenuPrimitive.RadioItem>
-

@@ -2,6 +2,7 @@ import {
 	capabilityRegistry,
 	getDatabaseDialect,
 	getDatabaseProvider,
+	getIconLibrariesForUi,
 	getUiAdapter,
 	isSelectableSupport
 } from './registry.js';
@@ -45,6 +46,13 @@ const choiceDescriptors = [
 		description: 'Choose a theme owned by the selected UI adapter.',
 		dependsOn: 'ui.adapter',
 		defaultValue: capabilityRegistry.defaults.ui.theme
+	},
+	{
+		field: 'ui.iconLibrary',
+		label: 'Icon library',
+		description: 'Choose an icon family supported by the selected UI adapter.',
+		dependsOn: 'ui.adapter',
+		defaultValue: capabilityRegistry.defaults.ui.iconLibrary
 	},
 	{
 		field: 'dataPattern',
@@ -93,6 +101,7 @@ export const configuratorCatalog: ConfiguratorCatalog = {
 		'packageManager',
 		'ui.adapter',
 		'ui.theme',
+		'ui.iconLibrary',
 		'dataPattern',
 		'validation',
 		'orm',
@@ -106,7 +115,8 @@ export const configuratorCatalog: ConfiguratorCatalog = {
 	packageManagers: capabilityRegistry.packageManagers.map(toChoice),
 	uiAdapters: capabilityRegistry.uiAdapters.map((adapter) => ({
 		...toChoice(adapter),
-		themes: adapter.themes.map(toChoice)
+		themes: adapter.themes.map(toChoice),
+		iconLibraries: adapter.iconLibraries.map(toChoice)
 	})),
 	dataPatterns: capabilityRegistry.dataPatterns.map(toChoice),
 	validations: capabilityRegistry.validations.map(toChoice),
@@ -151,6 +161,10 @@ export function getConditionalChoices(
 	if (field === 'ui.theme') {
 		const adapterId = config.ui?.adapter ?? capabilityRegistry.defaults.ui.adapter;
 		return visibleChoices(getUiAdapter(adapterId)?.themes ?? [], options);
+	}
+	if (field === 'ui.iconLibrary') {
+		const adapterId = config.ui?.adapter ?? capabilityRegistry.defaults.ui.adapter;
+		return visibleChoices(getIconLibrariesForUi(adapterId), options);
 	}
 	if (field === 'dataPattern') return visibleChoices(capabilityRegistry.dataPatterns, options);
 	if (field === 'validation') return visibleChoices(capabilityRegistry.validations, options);

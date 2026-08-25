@@ -1,6 +1,5 @@
 export const shadcnSvelteDependencies = Object.freeze({
 	'@internationalized/date': '3.12.3',
-	'@lucide/svelte': '1.34.0',
 	'bits-ui': '2.16.3',
 	clsx: '2.1.1',
 	'tailwind-merge': '3.6.0',

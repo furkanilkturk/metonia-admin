@@ -3,6 +3,7 @@ export {
 	getDatabaseDialect,
 	getDatabaseDriver,
 	getDatabaseProvider,
+	getIconLibrariesForUi,
 	getThemesForUi,
 	getUiAdapter,
 	isSelectableSupport
@@ -50,6 +51,8 @@ export type {
 	DatabaseProviderId,
 	DataPatternId,
 	DefaultedConfigPath,
+	IconLibraryDefinition,
+	IconLibraryId,
 	OrmId,
 	PackageManagerId,
 	RawConfig,

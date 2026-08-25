@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { adminNavigation } from '$lib/client/navigation/adminNavigation.js';
 	import { Button } from '$lib/client/ui/components/button/index.js';
+	import AppIcon from '$lib/client/ui/components/app-icon.svelte';
 	import * as Dialog from '$lib/client/ui/components/dialog/index.js';
 	import AdminHeader from '$lib/client/ui/views/layout/adminHeader.svelte';
 	import AdminSidebar from '$lib/client/ui/views/layout/adminSidebar.svelte';
 	import { navigating, page } from '$app/state';
-	import XIcon from '@lucide/svelte/icons/x';
 	import type { Snippet } from 'svelte';
 
 	let { children }: { children: Snippet } = $props();
@@ -30,14 +30,14 @@
 	Skip to content
 </a>
 
-<div class="min-h-dvh bg-background lg:grid lg:grid-cols-[15.5rem_minmax(0,1fr)]">
+<div class="min-h-dvh bg-muted/20 lg:grid lg:grid-cols-[16.5rem_minmax(0,1fr)]">
 	<div class="sticky top-0 hidden h-dvh lg:block">
 		<AdminSidebar {pathname} />
 	</div>
 
 	<div class="min-w-0">
 		<AdminHeader {currentLabel} onOpenNavigation={() => (navigationOpen = true)} />
-		<main id="admin-content" class="min-w-0 px-4 py-6 sm:px-6 lg:px-8 lg:py-8" tabindex="-1">
+		<main id="admin-content" class="min-w-0 px-4 py-5 sm:px-6 lg:px-8 lg:py-7" tabindex="-1">
 			{@render children()}
 		</main>
 	</div>
@@ -62,7 +62,7 @@
 					class="absolute right-2 top-2 size-11 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
 					aria-label="Close primary navigation"
 				>
-					<XIcon class="size-5" aria-hidden="true" />
+					<AppIcon name="x" class="size-5" aria-hidden="true" />
 				</Button>
 			{/snippet}
 		</Dialog.Close>

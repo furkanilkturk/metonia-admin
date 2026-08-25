@@ -42,7 +42,7 @@ startup. {{DOCKER_AGENT_GUIDE}}
 
 ## Recorded configuration
 
-- UI/theme: `{{UI_ADAPTER}}` / `{{UI_THEME}}`; primitives live in
+- UI/theme/icons: `{{UI_ADAPTER}}` / `{{UI_THEME}}` / `{{ICON_LIBRARY}}`; primitives live in
   `src/lib/client/ui/components`
 - Validation: `{{VALIDATION}}`; validate mutations authoritatively at the server boundary
 - Database: `{{ORM}}`, `{{DATABASE_DIALECT}}`, `{{DATABASE_PROVIDER}}`, `{{DATABASE_DRIVER}}`

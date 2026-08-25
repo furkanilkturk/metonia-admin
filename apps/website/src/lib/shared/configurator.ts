@@ -15,6 +15,7 @@ export type WebsiteDraft = {
 	packageManager: string;
 	uiAdapter: string;
 	uiTheme: string;
+	iconLibrary: string;
 	dataPattern: string;
 	validation: string;
 	orm: string;
@@ -39,6 +40,7 @@ export function initialDraft(): WebsiteDraft {
 		packageManager: defaults.packageManager,
 		uiAdapter: defaults.ui.adapter,
 		uiTheme: defaults.ui.theme,
+		iconLibrary: defaults.ui.iconLibrary,
 		dataPattern: defaults.dataPattern,
 		validation: defaults.validation,
 		orm: defaults.orm,
@@ -54,7 +56,11 @@ export function toRawConfig(draft: WebsiteDraft): RawConfig {
 	return {
 		projectName: draft.projectName,
 		packageManager: draft.packageManager,
-		ui: { adapter: draft.uiAdapter, theme: draft.uiTheme },
+		ui: {
+			adapter: draft.uiAdapter,
+			theme: draft.uiTheme,
+			iconLibrary: draft.iconLibrary
+		},
 		dataPattern: draft.dataPattern,
 		validation: draft.validation,
 		orm: draft.orm,
@@ -81,6 +87,7 @@ export function previewCommand(config: ResolvedConfig | undefined): string {
 		`--package-manager ${config.packageManager}`,
 		`--ui ${config.ui.adapter}`,
 		`--theme ${config.ui.theme}`,
+		`--icon-library ${config.ui.iconLibrary}`,
 		`--data-pattern ${config.dataPattern === 'sveltekit-standard' ? 'standard' : 'remote-functions'}`,
 		`--validation ${config.validation}`,
 		`--orm ${config.orm}`,
@@ -102,7 +109,11 @@ export function choicesFor(
 		field,
 		{
 			projectName: draft.projectName,
-			ui: { adapter: draft.uiAdapter, theme: draft.uiTheme },
+			ui: {
+				adapter: draft.uiAdapter,
+				theme: draft.uiTheme,
+				iconLibrary: draft.iconLibrary
+			},
 			database: { dialect: draft.dialect, provider: draft.provider, driver: draft.driver }
 		},
 		{ includeUnavailable: true }

@@ -34,7 +34,12 @@ const definitions = Object.freeze({
 		add: ['add'],
 		addDev: ['add', '--development'],
 		run: ['run'],
-		exec: []
+		exec: [],
+		docker: {
+			buildImage: 'oven/bun:1.4.0',
+			dependencyFiles: ['package.json', 'bun.lock'],
+			productionInstall: ['install', '--frozen-lockfile', '--production', '--ignore-scripts']
+		}
 	},
 	npm: {
 		id: 'npm',
@@ -49,7 +54,12 @@ const definitions = Object.freeze({
 		add: ['install', '--save'],
 		addDev: ['install', '--save-dev'],
 		run: ['run'],
-		exec: ['--yes']
+		exec: ['--yes'],
+		docker: {
+			buildImage: 'node:24.19.0-bookworm-slim',
+			dependencyFiles: ['package.json', 'package-lock.json'],
+			productionInstall: ['ci', '--omit=dev', '--ignore-scripts']
+		}
 	},
 	pnpm: {
 		id: 'pnpm',
@@ -66,7 +76,13 @@ const definitions = Object.freeze({
 		exec: ['dlx'],
 		configurationFiles: {
 			'pnpm-workspace.yaml':
-				'allowBuilds:\n  esbuild: true\nminimumReleaseAgeExclude:\n  - "@lucide/svelte@1.34.0"\n'
+				'allowBuilds:\n  esbuild: true\nminimumReleaseAgeExclude:\n  - "@lucide/svelte@1.34.0"\n  - "@tabler/icons-svelte@3.46.0"\n  - "@hugeicons/svelte@1.1.5"\n  - "@hugeicons/core-free-icons@4.3.0"\n  - "phosphor-svelte@3.1.0"\n  - "remixicon-svelte@0.0.5"\n'
+		},
+		docker: {
+			buildImage: 'node:24.19.0-bookworm-slim',
+			dependencyFiles: ['package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml'],
+			setupCommands: [['corepack', 'enable']],
+			productionInstall: ['install', '--prod', '--frozen-lockfile', '--ignore-scripts']
 		}
 	},
 	yarn: {
@@ -84,7 +100,14 @@ const definitions = Object.freeze({
 		exec: ['dlx'],
 		initialLockfileContents: '',
 		configurationFiles: {
-			'.yarnrc.yml': 'npmPreapprovedPackages:\n  - "@lucide/svelte@1.34.0"\n'
+			'.yarnrc.yml':
+				'nodeLinker: node-modules\nnpmPreapprovedPackages:\n  - "@lucide/svelte@1.34.0"\n  - "@tabler/icons-svelte@3.46.0"\n  - "@hugeicons/svelte@1.1.5"\n  - "@hugeicons/core-free-icons@4.3.0"\n  - "phosphor-svelte@3.1.0"\n  - "remixicon-svelte@0.0.5"\n'
+		},
+		docker: {
+			buildImage: 'node:24.19.0-bookworm-slim',
+			dependencyFiles: ['package.json', 'yarn.lock', '.yarnrc.yml'],
+			setupCommands: [['corepack', 'enable']],
+			productionInstall: ['workspaces', 'focus', '--all', '--production']
 		}
 	},
 	deno: {
@@ -150,6 +173,23 @@ function createAdapter(definition: PackageManagerAdapterDefinition): PackageMana
 			? {}
 			: { initialLockfileContents: definition.initialLockfileContents }),
 		configurationFiles: Object.freeze({ ...(definition.configurationFiles ?? {}) }),
+		...(definition.docker === undefined
+			? {}
+			: {
+					docker: Object.freeze({
+						buildImage: validatedToken(definition.docker.buildImage),
+						dependencyFiles: Object.freeze(validated(definition.docker.dependencyFiles)),
+						setupCommands: Object.freeze(
+							(definition.docker.setupCommands ?? []).map(([executable, ...arguments_]) =>
+								command(executable ?? '', arguments_)
+							)
+						),
+						productionInstallCommand: command(
+							definition.executable,
+							definition.docker.productionInstall
+						)
+					})
+				}),
 		installCommand,
 		frozenInstallCommand,
 		add: (packages: readonly string[]) =>

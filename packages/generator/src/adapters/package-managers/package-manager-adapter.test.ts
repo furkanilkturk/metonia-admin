@@ -88,7 +88,8 @@ describe('generated-project package-manager adapters', () => {
 	test('gives modern Yarn an empty local lock boundary before its first install', () => {
 		expect(getPackageManagerAdapter('yarn')).toMatchObject({
 			configurationFiles: {
-				'.yarnrc.yml': 'npmPreapprovedPackages:\n  - "@lucide/svelte@1.34.0"\n'
+				'.yarnrc.yml':
+					'nodeLinker: node-modules\nnpmPreapprovedPackages:\n  - "@lucide/svelte@1.34.0"\n  - "@tabler/icons-svelte@3.46.0"\n  - "@hugeicons/svelte@1.1.5"\n  - "@hugeicons/core-free-icons@4.3.0"\n  - "phosphor-svelte@3.1.0"\n  - "remixicon-svelte@0.0.5"\n'
 			},
 			initialLockfileContents: '',
 			lockfile: 'yarn.lock'
@@ -101,14 +102,39 @@ describe('generated-project package-manager adapters', () => {
 	test('keeps current install safety gates explicit and narrowly approved', () => {
 		expect(getPackageManagerAdapter('pnpm').configurationFiles).toEqual({
 			'pnpm-workspace.yaml':
-				'allowBuilds:\n  esbuild: true\nminimumReleaseAgeExclude:\n  - "@lucide/svelte@1.34.0"\n'
+				'allowBuilds:\n  esbuild: true\nminimumReleaseAgeExclude:\n  - "@lucide/svelte@1.34.0"\n  - "@tabler/icons-svelte@3.46.0"\n  - "@hugeicons/svelte@1.1.5"\n  - "@hugeicons/core-free-icons@4.3.0"\n  - "phosphor-svelte@3.1.0"\n  - "remixicon-svelte@0.0.5"\n'
 		});
 		expect(getPackageManagerAdapter('yarn').configurationFiles).toEqual({
-			'.yarnrc.yml': 'npmPreapprovedPackages:\n  - "@lucide/svelte@1.34.0"\n'
+			'.yarnrc.yml':
+				'nodeLinker: node-modules\nnpmPreapprovedPackages:\n  - "@lucide/svelte@1.34.0"\n  - "@tabler/icons-svelte@3.46.0"\n  - "@hugeicons/svelte@1.1.5"\n  - "@hugeicons/core-free-icons@4.3.0"\n  - "phosphor-svelte@3.1.0"\n  - "remixicon-svelte@0.0.5"\n'
 		});
 		for (const id of ['bun', 'npm', 'deno'] as const) {
 			expect(getPackageManagerAdapter(id).configurationFiles).toEqual({});
 		}
+	});
+
+	test('keeps Docker lockfiles and production installs behind package-manager adapters', () => {
+		expect(getPackageManagerAdapter('bun').docker).toMatchObject({
+			buildImage: 'oven/bun:1.4.0',
+			dependencyFiles: ['package.json', 'bun.lock'],
+			productionInstallCommand: {
+				executable: 'bun',
+				arguments: ['install', '--frozen-lockfile', '--production', '--ignore-scripts']
+			}
+		});
+		expect(getPackageManagerAdapter('npm').docker).toMatchObject({
+			dependencyFiles: ['package.json', 'package-lock.json'],
+			productionInstallCommand: {
+				executable: 'npm',
+				arguments: ['ci', '--omit=dev', '--ignore-scripts']
+			}
+		});
+		for (const id of ['pnpm', 'yarn'] as const) {
+			expect(getPackageManagerAdapter(id).docker?.setupCommands).toEqual([
+				{ executable: 'corepack', arguments: ['enable'] }
+			]);
+		}
+		expect(getPackageManagerAdapter('deno').docker).toBeUndefined();
 	});
 
 	test('renders documentation only after plans have been safely tokenized', () => {

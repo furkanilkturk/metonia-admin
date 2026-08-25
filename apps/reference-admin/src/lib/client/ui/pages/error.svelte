@@ -1,8 +1,6 @@
 <script lang="ts">
 	import { Button } from '$lib/client/ui/components/button/index.js';
-	import ArrowLeftIcon from '@lucide/svelte/icons/arrow-left';
-	import LayoutDashboardIcon from '@lucide/svelte/icons/layout-dashboard';
-	import TriangleAlertIcon from '@lucide/svelte/icons/triangle-alert';
+	import AppIcon from '$lib/client/ui/components/app-icon.svelte';
 
 	interface Props {
 		message?: string;
@@ -36,9 +34,9 @@
 			<div class="grid content-between gap-10 bg-foreground p-6 text-background sm:p-7">
 				<span class="grid size-10 place-items-center rounded-xl bg-background/10" aria-hidden="true">
 					{#if isNotFound}
-						<ArrowLeftIcon class="size-5" />
+						<AppIcon name="arrow-left" class="size-5" />
 					{:else}
-						<TriangleAlertIcon class="size-5" />
+						<AppIcon name="triangle-alert" class="size-5" />
 					{/if}
 				</span>
 				<p class="font-mono text-5xl font-semibold tracking-[-0.08em] sm:text-6xl">{status}</p>
@@ -57,7 +55,7 @@
 				{/if}
 				<div class="mt-7 flex flex-wrap gap-3">
 					<Button href="/dashboard" class="h-11 gap-2 sm:h-10">
-						<LayoutDashboardIcon class="size-4" aria-hidden="true" />
+						<AppIcon name="dashboard" class="size-4" aria-hidden="true" />
 						Back to dashboard
 					</Button>
 					<Button href="/settings" variant="outline" class="h-11 sm:h-10">Workspace settings</Button>

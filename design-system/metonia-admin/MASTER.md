@@ -100,7 +100,7 @@ On narrow screens, the configurator follows the thesis and the trace becomes a v
 - Interactive targets are at least 44×44px on touch layouts, with at least 8px separation for adjacent destructive/primary actions.
 - Every input has a persistent visible label. Put errors beside the field and focus the first invalid field after submit.
 - Icon-only buttons require an accessible name and tooltip where the icon is not universally obvious.
-- Use one Lucide icon family; never use emoji as interface icons.
+- Use exactly one icon family per generated project. The shadcn-svelte adapter may select Lucide, Tabler, HugeIcons, Phosphor, or Remix Icon; never mix families inside one project and never use emoji as interface icons.
 - Cards are not clickable by default. Interactive cards need semantic links/buttons and a visible focus treatment.
 - Tables retain headers, expose row actions to keyboard users, and provide non-color status labels.
 - Empty states state what is absent and offer the next valid action. Errors identify what failed and how to recover.
@@ -141,6 +141,7 @@ Describe behavior, not internal implementation, unless the surface is explicitly
 ## Anti-patterns
 
 - Generic metric-card hero sections, ornamental gradients, glass effects, and arbitrary bento layouts.
+- Oversized analytics panels that push the actionable work queue below the fold. Keep the operational pulse compact and make queue ownership, status, and handoff the dashboard's visual priority.
 - Mono body copy, low-contrast gray-on-gray text, or raw hex values scattered through components.
 - Hover-only affordances, removed focus rings, placeholder-only labels, or color-only status.
 - Scale-on-hover treatments that shift or blur dense content.

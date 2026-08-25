@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { DropdownMenu as DropdownMenuPrimitive } from "bits-ui";
-	import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
+	import AppIcon from '$lib/client/ui/components/app-icon.svelte';
 	import { cn } from "$lib/client/utils/index.js";
 
 	let {
@@ -25,6 +25,5 @@
 	{...restProps}
 >
 	{@render children?.()}
-	<ChevronRightIcon class="ml-auto" />
+	<AppIcon name="chevron-right" class="ml-auto" />
 </DropdownMenuPrimitive.SubTrigger>
-

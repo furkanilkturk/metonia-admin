@@ -1,9 +1,8 @@
 <script lang="ts">
 	import { Button } from '$lib/client/ui/components/button/index.js';
+	import AppIcon from '$lib/client/ui/components/app-icon.svelte';
 	import { Input } from '$lib/client/ui/components/input/index.js';
-	import SearchIcon from '@lucide/svelte/icons/search';
-	import RefreshCwIcon from '@lucide/svelte/icons/refresh-cw';
-	import XIcon from '@lucide/svelte/icons/x';
+	import * as Select from '$lib/client/ui/components/select/index.js';
 	import type {
 		DashboardStatusFilter,
 		DashboardWindow
@@ -43,16 +42,22 @@
 		onQueryChange((event.currentTarget as HTMLInputElement).value);
 	}
 
-	function handleStatus(event: Event): void {
-		onStatusChange((event.currentTarget as HTMLSelectElement).value as DashboardStatusFilter);
-	}
-
-	function handleWindow(event: Event): void {
-		onWindowChange((event.currentTarget as HTMLSelectElement).value as DashboardWindow);
-	}
+	const statuses = [
+		{ label: 'All statuses', value: 'all' },
+		{ label: 'Healthy', value: 'healthy' },
+		{ label: 'Needs attention', value: 'attention' },
+		{ label: 'Scheduled', value: 'scheduled' }
+	] as const;
+	const windows = [
+		{ label: 'Last 24 hours', value: '24h' },
+		{ label: 'Last 7 days', value: '7d' },
+		{ label: 'Last 30 days', value: '30d' }
+	] as const;
+	let statusLabel = $derived(statuses.find((option) => option.value === status)?.label ?? 'Status');
+	let windowLabel = $derived(windows.find((option) => option.value === window)?.label ?? 'Window');
 </script>
 
-<div class="border-b border-border px-4 py-5 sm:px-6">
+<div class="border-b border-border px-4 py-4 sm:px-5">
 	<div class="flex flex-wrap items-start justify-between gap-4">
 		<div>
 			<div class="flex flex-wrap items-center gap-2.5">
@@ -76,15 +81,19 @@
 				disabled={isLoading}
 				aria-label={isLoading ? 'Refreshing operations' : 'Refresh operations'}
 			>
-				<RefreshCwIcon class={['size-4', isLoading && 'animate-spin']} aria-hidden="true" />
+				<AppIcon
+					name="refresh"
+					class={isLoading ? 'size-4 animate-spin' : 'size-4'}
+					aria-hidden="true"
+				/>
 			</Button>
 		</div>
 	</div>
 
-	<div class="mt-5 grid gap-3 lg:grid-cols-[minmax(15rem,1fr)_11rem_10rem_auto]">
+	<div class="mt-4 grid gap-2.5 lg:grid-cols-[minmax(15rem,1fr)_11rem_10rem_auto]">
 		<label class="relative block" for="operation-search">
 			<span class="sr-only">Search operations</span>
-			<SearchIcon class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+			<AppIcon name="search" class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
 			<Input
 				id="operation-search"
 				class="h-11 bg-background pl-9 sm:h-10"
@@ -94,38 +103,35 @@
 			/>
 		</label>
 
-		<label for="operation-status">
-			<span class="sr-only">Filter by status</span>
-			<select
-				id="operation-status"
-				class="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:h-10"
-				value={status}
-				onchange={handleStatus}
-			>
-				<option value="all">All statuses</option>
-				<option value="healthy">Healthy</option>
-				<option value="attention">Needs attention</option>
-				<option value="scheduled">Scheduled</option>
-			</select>
-		</label>
+		<Select.Root
+			type="single"
+			value={status}
+			onValueChange={(value) => onStatusChange(value as DashboardStatusFilter)}
+		>
+			<Select.Trigger aria-label="Filter by status" class="h-11 sm:h-10">{statusLabel}</Select.Trigger>
+			<Select.Content>
+				{#each statuses as option (option.value)}
+					<Select.Item value={option.value} label={option.label}>{option.label}</Select.Item>
+				{/each}
+			</Select.Content>
+		</Select.Root>
 
-		<label for="operation-window">
-			<span class="sr-only">Filter by time window</span>
-			<select
-				id="operation-window"
-				class="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:h-10"
-				value={window}
-				onchange={handleWindow}
-			>
-				<option value="24h">Last 24 hours</option>
-				<option value="7d">Last 7 days</option>
-				<option value="30d">Last 30 days</option>
-			</select>
-		</label>
+		<Select.Root
+			type="single"
+			value={window}
+			onValueChange={(value) => onWindowChange(value as DashboardWindow)}
+		>
+			<Select.Trigger aria-label="Filter by time window" class="h-11 sm:h-10">{windowLabel}</Select.Trigger>
+			<Select.Content>
+				{#each windows as option (option.value)}
+					<Select.Item value={option.value} label={option.label}>{option.label}</Select.Item>
+				{/each}
+			</Select.Content>
+		</Select.Root>
 
 		{#if activeFilterCount > 0}
 			<Button variant="ghost" onclick={onClear} class="h-11 justify-start gap-2 px-3 lg:justify-center sm:h-10">
-				<XIcon class="size-4" aria-hidden="true" />
+				<AppIcon name="x" class="size-4" aria-hidden="true" />
 				Reset
 			</Button>
 		{/if}

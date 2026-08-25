@@ -123,6 +123,7 @@ function documentReplacements(
 		SVELTEKIT_VERSION: generatedToolVersions.svelteKit,
 		UI_ADAPTER: config.ui.adapter,
 		UI_THEME: config.ui.theme,
+		ICON_LIBRARY: config.ui.iconLibrary,
 		USERS_AGENT_GUIDE: config.resources.users
 			? 'follow the neighboring shared schemas, server repository/service, client views/pages, and thin routes when adding resources'
 			: 'the canonical Users example is omitted, so add a resource only through the same shared/server/client/route boundaries',
@@ -167,6 +168,7 @@ async function validateDocuments(context: StagedValidationContext): Promise<void
 		packageManager.lockfile,
 		context.config.ui.adapter,
 		context.config.ui.theme,
+		context.config.ui.iconLibrary,
 		context.config.dataPattern,
 		context.config.validation,
 		context.config.orm,

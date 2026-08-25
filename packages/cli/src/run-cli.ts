@@ -6,7 +6,9 @@ import { confirm, isCancel, note, select, spinner, text } from '@clack/prompts';
 import {
 	generateConfiguredProject,
 	type GenerateResult,
-	type GenerationErrorDetails
+	type GenerateProjectDependencies,
+	type GenerationErrorDetails,
+	type GenerationProgressEvent
 } from '@metonia-admin/generator';
 import {
 	capabilityRegistry,
@@ -33,6 +35,7 @@ export interface CliSelection {
 	readonly packageManager?: string;
 	readonly ui?: string;
 	readonly theme?: string;
+	readonly iconLibrary?: string;
 	readonly dataPattern?: string;
 	readonly validation?: string;
 	readonly orm?: string;
@@ -79,6 +82,7 @@ export interface CliIo {
 
 export interface CliActivityIndicator {
 	start(message: string): void;
+	message(message: string): void;
 	stop(message: string): void;
 	error(message: string): void;
 }
@@ -90,7 +94,10 @@ export interface CliGenerationRequest {
 	readonly git: boolean;
 }
 
-export type GeneratorExecutor = (request: CliGenerationRequest) => Promise<GenerateResult>;
+export type GeneratorExecutor = (
+	request: CliGenerationRequest,
+	dependencies?: Pick<GenerateProjectDependencies, 'onProgress'>
+) => Promise<GenerateResult>;
 
 export interface CliDependencies {
 	readonly io: CliIo;
@@ -101,7 +108,7 @@ export interface CliDependencies {
 export interface CliErrorDetails {
 	readonly code: string;
 	readonly message: string;
-	readonly stage?: string;
+	readonly stage?: GenerationProgressEvent['stage'];
 	readonly recipeId?: string;
 	readonly checkId?: string;
 	readonly issues?: readonly ConfigIssue[];
@@ -230,20 +237,37 @@ export async function runCli(
 		const git = selection.git ?? true;
 		const activity =
 			dependencies.io.isInteractive && !json ? dependencies.io.createActivity?.() : undefined;
-		activity?.start(generationActivityMessage(install, git));
+		let activityMessage = 'Preparing generation plan';
+		activity?.start(activityMessage);
 
 		let generation: GenerateResult;
 		try {
-			generation = await (dependencies.generate ?? generateConfiguredProject)({
-				config: resolution.config,
-				destination: requireDestination(selection.destination),
-				install,
-				git
-			});
+			generation = await (dependencies.generate ?? generateConfiguredProject)(
+				{
+					config: resolution.config,
+					destination: requireDestination(selection.destination),
+					install,
+					git
+				},
+				{
+					onProgress(event) {
+						if (event.status !== 'started') return;
+						const nextMessage = generationStageMessage(event, resolution.config.packageManager);
+						if (nextMessage === activityMessage) return;
+						activityMessage = nextMessage;
+						activity?.message(nextMessage);
+					}
+				}
+			);
 			if (!generation.ok) throw fromGenerationError(generation.error);
 			activity?.stop('Project generated successfully');
 		} catch (error) {
-			activity?.error('Project generation failed');
+			const stage = toErrorDetails(error).stage;
+			activity?.error(
+				stage === undefined
+					? 'Project generation failed'
+					: `Project generation failed: ${generationStageLabel(stage)}`
+			);
 			throw error;
 		}
 
@@ -264,11 +288,39 @@ export async function runCli(
 	}
 }
 
-function generationActivityMessage(install: boolean, git: boolean): string {
-	if (install && git) return 'Creating project, installing dependencies, and initializing Git';
-	if (install) return 'Creating project and installing dependencies';
-	if (git) return 'Creating project and initializing Git';
-	return 'Creating project';
+function generationStageMessage(
+	event: GenerationProgressEvent,
+	packageManager: ResolvedConfig['packageManager']
+): string {
+	if (event.stage === 'install-dependencies') {
+		return `Installing dependencies with ${packageManagerLabel(packageManager)}`;
+	}
+	return generationStageLabel(event.stage);
+}
+
+function generationStageLabel(stage: GenerationProgressEvent['stage']): string {
+	const labels: Readonly<Record<GenerationProgressEvent['stage'], string>> = {
+		'resolve-plan': 'Preparing generation plan',
+		'validate-destination': 'Checking project destination',
+		'create-staging': 'Preparing a safe temporary workspace',
+		'run-recipes': 'Generating application files',
+		'validate-staging': 'Validating the generated project',
+		'install-dependencies': 'Installing dependencies',
+		'initialize-git': 'Initializing the Git repository',
+		finalize: 'Moving the completed project into place'
+	};
+	return labels[stage];
+}
+
+function packageManagerLabel(packageManager: ResolvedConfig['packageManager']): string {
+	const labels: Readonly<Record<ResolvedConfig['packageManager'], string>> = {
+		bun: 'Bun',
+		npm: 'npm',
+		pnpm: 'pnpm',
+		yarn: 'Yarn',
+		deno: 'Deno'
+	};
+	return labels[packageManager];
 }
 
 function collectNonInteractiveSelection(parsed: ParsedArguments): CliSelection {
@@ -304,6 +356,9 @@ async function collectInteractiveSelection(
 	const ui = parsed.ui ?? (await askChoice(prompts, 'UI library', 'ui.adapter', {}));
 	const theme =
 		parsed.theme ?? (await askChoice(prompts, 'Theme', 'ui.theme', { ui: { adapter: ui } }));
+	const iconLibrary =
+		parsed.iconLibrary ??
+		(await askChoice(prompts, 'Icon library', 'ui.iconLibrary', { ui: { adapter: ui } }));
 	const dataPattern =
 		parsed.dataPattern ?? (await askChoice(prompts, 'Data pattern', 'dataPattern', {}));
 	const validation =
@@ -331,6 +386,7 @@ async function collectInteractiveSelection(
 		packageManager,
 		ui,
 		theme,
+		iconLibrary,
 		dataPattern,
 		validation,
 		orm,
@@ -351,7 +407,8 @@ function selectionToRawConfig(selection: CliSelection, cwd: string): RawConfig {
 		...(selection.packageManager === undefined ? {} : { packageManager: selection.packageManager }),
 		ui: {
 			...(selection.ui === undefined ? {} : { adapter: selection.ui }),
-			...(selection.theme === undefined ? {} : { theme: selection.theme })
+			...(selection.theme === undefined ? {} : { theme: selection.theme }),
+			...(selection.iconLibrary === undefined ? {} : { iconLibrary: selection.iconLibrary })
 		},
 		...(selection.dataPattern === undefined
 			? {}
@@ -519,6 +576,7 @@ function flagToField(token: string): keyof CliSelection | undefined {
 		'--package-manager': 'packageManager',
 		'--ui': 'ui',
 		'--theme': 'theme',
+		'--icon-library': 'iconLibrary',
 		'--data-pattern': 'dataPattern',
 		'--validation': 'validation',
 		'--orm': 'orm',
@@ -552,6 +610,7 @@ const requiredConfigFields = [
 	'packageManager',
 	'ui',
 	'theme',
+	'iconLibrary',
 	'dataPattern',
 	'validation',
 	'orm',
@@ -567,6 +626,7 @@ function flagForField(field: (typeof requiredConfigFields)[number]): string {
 		packageManager: '--package-manager',
 		ui: '--ui',
 		theme: '--theme',
+		iconLibrary: '--icon-library',
 		dataPattern: '--data-pattern',
 		validation: '--validation',
 		orm: '--orm',
@@ -585,6 +645,7 @@ function defaultForField(field: Parameters<typeof getConditionalChoices>[0]): st
 		packageManager: defaults.packageManager,
 		'ui.adapter': defaults.ui.adapter,
 		'ui.theme': defaults.ui.theme,
+		'ui.iconLibrary': defaults.ui.iconLibrary,
 		dataPattern: defaults.dataPattern,
 		validation: defaults.validation,
 		orm: defaults.orm,
@@ -606,6 +667,7 @@ Options:
   --package-manager <id>  Generated-project package manager
   --ui <id>               UI adapter
   --theme <id>            Theme owned by the selected UI adapter
+  --icon-library <id>     Icon family owned by the selected UI adapter
   --data-pattern <id>     standard | remote-functions (canonical IDs also accepted)
   --validation <id>       Validation adapter
   --orm <id>              ORM adapter
@@ -628,7 +690,7 @@ export function createNodeCliIo(): CliIo {
 		stdout: (value) => process.stdout.write(value),
 		stderr: (value) => process.stderr.write(value),
 		prompts: createClackPromptAdapter(),
-		createActivity: () => spinner({ indicator: 'dots' })
+		createActivity: () => spinner({ indicator: 'timer', frames: ['◇'], delay: 1_000 })
 	};
 }
 

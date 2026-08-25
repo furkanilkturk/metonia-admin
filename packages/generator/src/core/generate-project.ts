@@ -20,6 +20,7 @@ import {
 	type GenerateRequest,
 	type GenerateResult,
 	type GenerationErrorCode,
+	type GenerationProgressEvent,
 	type GenerationStageResult,
 	type StagedCommandInvocation,
 	type StagedCommandPlan,
@@ -102,10 +103,13 @@ export async function generateProject(
 		const orderedRecipes = orderRecipes(request.recipes);
 		const operations = validateOperations(request.operations);
 		const commandTimeoutMs = validateCommandTimeout(dependencies.commandTimeoutMs);
+		reportProgress(dependencies, { stage: 'validate-destination', status: 'started' });
 		const destinationState = await inspectDestination(request.destination);
 		destination = destinationState.destination;
 		stages.push({ stage: 'validate-destination', status: 'completed' });
+		reportProgress(dependencies, { stage: 'validate-destination', status: 'completed' });
 
+		reportProgress(dependencies, { stage: 'create-staging', status: 'started' });
 		try {
 			stagingDirectory = await createStagingDirectory(destinationState);
 		} catch {
@@ -116,8 +120,10 @@ export async function generateProject(
 			);
 		}
 		stages.push({ stage: 'create-staging', status: 'completed' });
+		reportProgress(dependencies, { stage: 'create-staging', status: 'completed' });
 
 		const context = createRecipeContext(request.config, stagingDirectory, facts);
+		reportProgress(dependencies, { stage: 'run-recipes', status: 'started' });
 		for (const recipe of orderedRecipes) {
 			try {
 				await recipe.apply(context);
@@ -129,7 +135,9 @@ export async function generateProject(
 			}
 			stages.push({ recipeId: recipe.id, stage: 'run-recipes', status: 'completed' });
 		}
+		reportProgress(dependencies, { stage: 'run-recipes', status: 'completed' });
 
+		reportProgress(dependencies, { stage: 'validate-staging', status: 'started' });
 		const validators = [...(request.validators ?? []), ...facts.checks.values()].sort(
 			(left, right) => left.id.localeCompare(right.id)
 		);
@@ -146,8 +154,10 @@ export async function generateProject(
 			}
 		}
 		stages.push({ stage: 'validate-staging', status: 'completed' });
+		reportProgress(dependencies, { stage: 'validate-staging', status: 'completed' });
 
 		if (operations.install !== undefined) {
+			reportProgress(dependencies, { stage: 'install-dependencies', status: 'started' });
 			await executeStagedCommand(
 				operations.install,
 				stagingDirectory,
@@ -158,9 +168,11 @@ export async function generateProject(
 				'Dependency installation could not complete.'
 			);
 			stages.push({ stage: 'install-dependencies', status: 'completed' });
+			reportProgress(dependencies, { stage: 'install-dependencies', status: 'completed' });
 		}
 
 		if (operations.initializeGit !== undefined) {
+			reportProgress(dependencies, { stage: 'initialize-git', status: 'started' });
 			await executeStagedCommand(
 				operations.initializeGit,
 				stagingDirectory,
@@ -171,8 +183,10 @@ export async function generateProject(
 				'Git initialization could not complete.'
 			);
 			stages.push({ stage: 'initialize-git', status: 'completed' });
+			reportProgress(dependencies, { stage: 'initialize-git', status: 'completed' });
 		}
 
+		reportProgress(dependencies, { stage: 'finalize', status: 'started' });
 		try {
 			await finalizeStaging(destinationState, stagingDirectory);
 			stagingDirectory = undefined;
@@ -184,6 +198,7 @@ export async function generateProject(
 			);
 		}
 		stages.push({ stage: 'finalize', status: 'completed' });
+		reportProgress(dependencies, { stage: 'finalize', status: 'completed' });
 
 		return { config: request.config, destination, facts: facts.toFacts(), ok: true, stages };
 	} catch (error) {
@@ -223,6 +238,17 @@ export async function generateProject(
 			};
 		}
 		return { destination, error: safeError.toDetails(), facts: facts.toFacts(), ok: false, stages };
+	}
+}
+
+function reportProgress(
+	dependencies: GenerateProjectDependencies,
+	event: GenerationProgressEvent
+): void {
+	try {
+		dependencies.onProgress?.(Object.freeze(event));
+	} catch {
+		// Progress observers are presentation-only and must not affect transactional generation.
 	}
 }
 

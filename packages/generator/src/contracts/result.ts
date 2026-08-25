@@ -46,6 +46,12 @@ export type StagedCommandRunner = (invocation: StagedCommandInvocation) => Promi
 export interface GenerateProjectDependencies {
 	readonly runCommand?: StagedCommandRunner;
 	readonly commandTimeoutMs?: number;
+	readonly onProgress?: (event: GenerationProgressEvent) => void;
+}
+
+export interface GenerationProgressEvent {
+	readonly stage: GenerationStageId;
+	readonly status: 'started' | 'completed';
 }
 
 /** A safe, serializable error: never expose raw caught Error messages. */

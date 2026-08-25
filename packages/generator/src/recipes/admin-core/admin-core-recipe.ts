@@ -46,22 +46,17 @@ export function createAdminCoreRecipe(): Recipe {
 async function renderAdminNavigation(context: RecipeContext): Promise<string> {
 	const template = await readAdminCoreAsset('src/lib/client/navigation/adminNavigation.template');
 	const usersEnabled = context.config.resources.users;
-	return template
-		.replace(
-			'__USERS_ICON_IMPORT__',
-			usersEnabled ? "import UsersIcon from '@lucide/svelte/icons/users';" : ''
-		)
-		.replace(
-			'__USERS_NAV_ENTRY__',
-			usersEnabled
-				? `\t{
+	return template.replace(
+		'__USERS_NAV_ENTRY__',
+		usersEnabled
+			? `\t{
 \t\tdescription: 'Manage the generated Users resource.',
 \t\thref: '/users',
-\t\ticon: UsersIcon,
+\t\ticon: 'users',
 \t\tlabel: 'Users'
 \t},`
-				: ''
-		);
+			: ''
+	);
 }
 
 async function validateAdminCore(context: StagedValidationContext): Promise<void> {

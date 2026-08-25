@@ -5,6 +5,7 @@ export type SupportStatus = 'stable' | 'experimental' | 'unsupported' | 'unknown
 export type PackageManagerId = 'bun' | 'npm' | 'pnpm' | 'yarn' | 'deno';
 export type UiAdapterId = 'shadcn-svelte' | 'fluid-ui';
 export type ThemeId = 'neutral' | 'stone' | 'zinc' | 'mauve' | 'olive' | 'mist' | 'taupe';
+export type IconLibraryId = 'lucide' | 'tabler' | 'hugeicons' | 'phosphor' | 'remixicon';
 export type DataPatternId = 'sveltekit-standard' | 'sveltekit-remote-functions';
 export type ValidationId = 'zod';
 export type OrmId = 'drizzle';
@@ -17,6 +18,7 @@ export type CapabilityKind =
 	| 'package-manager'
 	| 'ui-adapter'
 	| 'theme'
+	| 'icon-library'
 	| 'data-pattern'
 	| 'validation'
 	| 'orm'
@@ -56,8 +58,12 @@ export interface ThemeDefinition<Id extends ThemeId = ThemeId> extends Capabilit
 	readonly baseColor: Id;
 }
 
+export type IconLibraryDefinition<Id extends IconLibraryId = IconLibraryId> =
+	CapabilityDefinition<Id>;
+
 export interface UiAdapterDefinition extends CapabilityDefinition<UiAdapterId> {
 	readonly themes: readonly ThemeDefinition[];
+	readonly iconLibraries: readonly IconLibraryDefinition[];
 }
 
 export type DatabaseDriverDefinition = CapabilityDefinition<DatabaseDriverId>;
@@ -80,7 +86,11 @@ export interface ConfigSelection {
 	readonly schemaVersion: ConfigSchemaVersion;
 	readonly projectName: string;
 	readonly packageManager: PackageManagerId;
-	readonly ui: { readonly adapter: UiAdapterId; readonly theme: ThemeId };
+	readonly ui: {
+		readonly adapter: UiAdapterId;
+		readonly theme: ThemeId;
+		readonly iconLibrary: IconLibraryId;
+	};
 	readonly dataPattern: DataPatternId;
 	readonly validation: ValidationId;
 	readonly orm: OrmId;
@@ -97,7 +107,11 @@ export interface RawConfig {
 	readonly schemaVersion?: number;
 	readonly projectName: string;
 	readonly packageManager?: string;
-	readonly ui?: { readonly adapter?: string; readonly theme?: string };
+	readonly ui?: {
+		readonly adapter?: string;
+		readonly theme?: string;
+		readonly iconLibrary?: string;
+	};
 	readonly dataPattern?: string;
 	readonly validation?: string;
 	readonly orm?: string;
@@ -114,6 +128,7 @@ export type DefaultedConfigPath =
 	| 'packageManager'
 	| 'ui.adapter'
 	| 'ui.theme'
+	| 'ui.iconLibrary'
 	| 'dataPattern'
 	| 'validation'
 	| 'orm'
@@ -137,6 +152,7 @@ export type ConfigIssueCode =
 	| 'unknown-capability'
 	| 'unselectable-capability'
 	| 'theme-not-owned'
+	| 'icon-library-not-owned'
 	| 'database-provider-not-owned'
 	| 'database-driver-not-owned'
 	| 'incompatible-capabilities'
@@ -162,6 +178,7 @@ export type ChoiceField =
 	| 'packageManager'
 	| 'ui.adapter'
 	| 'ui.theme'
+	| 'ui.iconLibrary'
 	| 'dataPattern'
 	| 'validation'
 	| 'orm'
@@ -193,6 +210,7 @@ export interface ConfiguratorCatalog {
 	readonly packageManagers: readonly ChoiceOption<PackageManagerId>[];
 	readonly uiAdapters: readonly (ChoiceOption<UiAdapterId> & {
 		readonly themes: readonly ChoiceOption<ThemeId>[];
+		readonly iconLibraries: readonly ChoiceOption<IconLibraryId>[];
 	})[];
 	readonly dataPatterns: readonly ChoiceOption<DataPatternId>[];
 	readonly validations: readonly ChoiceOption<ValidationId>[];

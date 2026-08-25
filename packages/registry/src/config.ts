@@ -2,6 +2,7 @@ import {
 	capabilityRegistry,
 	getDatabaseDialect,
 	getDatabaseProvider,
+	getIconLibrariesForUi,
 	getThemesForUi,
 	getUiAdapter,
 	isSelectableSupport
@@ -204,6 +205,18 @@ export function validateCompatibility(config: ConfigSelection): readonly ConfigI
 			capability: { kind: 'theme', id: config.ui.theme }
 		});
 	}
+	if (
+		adapter &&
+		!adapter.iconLibraries.some((iconLibrary) => iconLibrary.id === config.ui.iconLibrary)
+	) {
+		issues.push({
+			code: 'icon-library-not-owned',
+			severity: 'error',
+			path: 'ui.iconLibrary',
+			message: `Icon library "${config.ui.iconLibrary}" does not belong to UI adapter "${config.ui.adapter}".`,
+			capability: { kind: 'icon-library', id: config.ui.iconLibrary }
+		});
+	}
 
 	const dialect = getDatabaseDialect(config.database.dialect);
 	const provider = dialect?.providers.find(
@@ -237,16 +250,6 @@ export function validateCompatibility(config: ConfigSelection): readonly ConfigI
 			message:
 				'The experimental Remote Functions integration is a query proof and does not yet implement Users CRUD parity. Disable Users or select Standard SvelteKit.',
 			capability: { kind: 'resource', id: 'users' }
-		});
-	}
-
-	if (config.docker && config.packageManager !== 'bun') {
-		issues.push({
-			code: 'incompatible-capabilities',
-			severity: 'error',
-			path: 'docker',
-			message: `Docker generation is currently verified only with Bun, not ${config.packageManager}. Select Bun or disable Docker.`,
-			capability: { kind: 'feature', id: 'docker' }
 		});
 	}
 
@@ -308,6 +311,7 @@ export function resolveConfig(input: unknown): ConfigResolutionResult {
 		warnings
 	);
 	const adapterThemes = getThemesForUi(uiAdapter);
+	const adapterIconLibraries = getIconLibrariesForUi(uiAdapter);
 	const allThemes = capabilityRegistry.uiAdapters.flatMap((adapter) => adapter.themes);
 	let uiTheme;
 	if (
@@ -330,6 +334,35 @@ export function resolveConfig(input: unknown): ConfigResolutionResult {
 			capabilityRegistry.defaults.ui.theme,
 			adapterThemes,
 			'theme',
+			defaults,
+			errors,
+			warnings
+		);
+	}
+	const allIconLibraries = capabilityRegistry.uiAdapters.flatMap(
+		(adapter) => adapter.iconLibraries
+	);
+	let uiIconLibrary;
+	if (
+		typeof ui.iconLibrary === 'string' &&
+		allIconLibraries.some((iconLibrary) => iconLibrary.id === ui.iconLibrary) &&
+		!adapterIconLibraries.some((iconLibrary) => iconLibrary.id === ui.iconLibrary)
+	) {
+		uiIconLibrary = ui.iconLibrary as ConfigSelection['ui']['iconLibrary'];
+		errors.push({
+			code: 'icon-library-not-owned',
+			severity: 'error',
+			path: 'ui.iconLibrary',
+			message: `Icon library "${ui.iconLibrary}" does not belong to UI adapter "${uiAdapter}".`,
+			capability: { kind: 'icon-library', id: ui.iconLibrary }
+		});
+	} else {
+		uiIconLibrary = selectCapability(
+			ui.iconLibrary,
+			'ui.iconLibrary',
+			capabilityRegistry.defaults.ui.iconLibrary,
+			adapterIconLibraries,
+			'icon-library',
 			defaults,
 			errors,
 			warnings
@@ -414,7 +447,7 @@ export function resolveConfig(input: unknown): ConfigResolutionResult {
 		schemaVersion: CONFIG_SCHEMA_VERSION,
 		projectName,
 		packageManager,
-		ui: { adapter: uiAdapter, theme: uiTheme },
+		ui: { adapter: uiAdapter, theme: uiTheme, iconLibrary: uiIconLibrary },
 		dataPattern,
 		validation,
 		orm,

@@ -42,7 +42,7 @@ startup. Docker support is disabled, so do not add Docker-only commands or files
 
 ## Recorded configuration
 
-- UI/theme: `shadcn-svelte` / `zinc`; primitives live in
+- UI/theme/icons: `shadcn-svelte` / `zinc` / `lucide`; primitives live in
   `src/lib/client/ui/components`
 - Validation: `zod`; validate mutations authoritatively at the server boundary
 - Database: `drizzle`, `postgresql`, `generic`, `pg`

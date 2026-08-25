@@ -13,7 +13,7 @@ ordinary application code owned by this project; it does not require a Metonia r
 - Svelte: `{{SVELTE_VERSION}}`
 - SvelteKit: `{{SVELTEKIT_VERSION}}`
 - Deployment adapter: `@sveltejs/adapter-node@{{ADAPTER_NODE_VERSION}}`
-- UI: `{{UI_ADAPTER}}` with the `{{UI_THEME}}` theme, installed under `src/lib/client/ui/components`
+- UI: `{{UI_ADAPTER}}` with the `{{UI_THEME}}` theme and `{{ICON_LIBRARY}}` icons, installed under `src/lib/client/ui/components`
 - Data boundary: `{{DATA_PATTERN}}`
 - Validation: `{{VALIDATION}}`
 - Persistence: `{{ORM}}` with `{{DATABASE_DIALECT}}` / `{{DATABASE_PROVIDER}}` / `{{DATABASE_DRIVER}}`

@@ -1,16 +1,12 @@
 <script lang="ts">
 	import { Button } from '$lib/client/ui/components/button/index.js';
+	import AppIcon from '$lib/client/ui/components/app-icon.svelte';
 	import * as DropdownMenu from '$lib/client/ui/components/dropdown-menu/index.js';
 	import * as Table from '$lib/client/ui/components/table/index.js';
 	import type {
 		DashboardOperation,
 		DashboardOperationStatus
 	} from '$lib/shared/types/dashboard.js';
-	import CheckCircle2Icon from '@lucide/svelte/icons/circle-check-big';
-	import Clock3Icon from '@lucide/svelte/icons/clock-3';
-	import EllipsisIcon from '@lucide/svelte/icons/ellipsis';
-	import SearchXIcon from '@lucide/svelte/icons/search-x';
-	import TriangleAlertIcon from '@lucide/svelte/icons/triangle-alert';
 
 	interface Props {
 		isLoading: boolean;
@@ -93,11 +89,11 @@
 								]}
 							>
 								{#if operation.status === 'healthy'}
-									<CheckCircle2Icon class="size-3.5" aria-hidden="true" />
+									<AppIcon name="circle-check" class="size-3.5" aria-hidden="true" />
 								{:else if operation.status === 'attention'}
-									<TriangleAlertIcon class="size-3.5" aria-hidden="true" />
+									<AppIcon name="triangle-alert" class="size-3.5" aria-hidden="true" />
 								{:else}
-									<Clock3Icon class="size-3.5" aria-hidden="true" />
+									<AppIcon name="clock" class="size-3.5" aria-hidden="true" />
 								{/if}
 								{statusLabels[operation.status]}
 							</span>
@@ -116,7 +112,7 @@
 											class="size-11 sm:size-9"
 											aria-label={`Open actions for ${operation.name}`}
 										>
-											<EllipsisIcon class="size-4" aria-hidden="true" />
+											<AppIcon name="ellipsis" class="size-4" aria-hidden="true" />
 										</Button>
 									{/snippet}
 								</DropdownMenu.Trigger>
@@ -137,7 +133,7 @@
 						<Table.Cell colspan={5} class="h-64 p-6 text-center">
 							<div class="mx-auto grid max-w-sm justify-items-center">
 								<span class="grid size-11 place-items-center rounded-xl bg-muted text-muted-foreground">
-									<SearchXIcon class="size-5" aria-hidden="true" />
+									<AppIcon name="search-empty" class="size-5" aria-hidden="true" />
 								</span>
 								<h3 class="mt-4 font-heading text-base font-semibold">No operations found</h3>
 								<p class="mt-1.5 text-sm leading-6 text-muted-foreground">

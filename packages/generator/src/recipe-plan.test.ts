@@ -94,7 +94,7 @@ describe('generated-project package-manager recipe plan', () => {
 		expect(() => createBunRecipePlan(config)).toThrow('Bun recipe plan');
 	});
 
-	test('composes implemented variations and rejects unsupported crossings', () => {
+	test('composes implemented variations and keeps unsupported crossings closed', () => {
 		expect(
 			createBunRecipePlan(baseProofConfig('remote', 'bun', { remote: true })).recipes.map(
 				({ id }) => id
@@ -114,7 +114,13 @@ describe('generated-project package-manager recipe plan', () => {
 		expect(() => createRecipePlan(remoteUsersConfig('remote-users'))).toThrow(
 			'does not implement Users CRUD parity'
 		);
-		expect(() => createRecipePlan(npmDockerConfig('npm-docker'))).toThrow('only with Bun');
+		for (const packageManager of implementedPackageManagers) {
+			expect(
+				createRecipePlan(
+					baseProofConfig(`${packageManager}-docker`, packageManager, { docker: true })
+				).recipes.map(({ id }) => id)
+			).toContain('docker-container');
+		}
 
 		const zinc = baseProofConfig('neutral-theme');
 		const neutralTheme = {
@@ -184,8 +190,7 @@ describe('generated-project package-manager recipe plan', () => {
 	test('preflights unsupported feature crossings before creating staging output', async () => {
 		const root = await createTestRoot();
 		const cases: readonly [ResolvedConfig, string][] = [
-			[remoteUsersConfig('remote-users'), 'USERS_RESOURCE_NOT_IMPLEMENTED'],
-			[npmDockerConfig('npm-docker'), 'DOCKER_NOT_IMPLEMENTED']
+			[remoteUsersConfig('remote-users'), 'USERS_RESOURCE_NOT_IMPLEMENTED']
 		];
 
 		for (const [config, code] of cases) {
@@ -424,7 +429,7 @@ function baseProofConfig(
 		schemaVersion: 1,
 		projectName,
 		packageManager,
-		ui: { adapter: 'shadcn-svelte', theme: 'zinc' },
+		ui: { adapter: 'shadcn-svelte', theme: 'zinc', iconLibrary: 'lucide' },
 		dataPattern: features.remote ? 'sveltekit-remote-functions' : 'sveltekit-standard',
 		validation: 'zod',
 		orm: 'drizzle',
@@ -445,11 +450,6 @@ function remoteUsersConfig(projectName: string): ResolvedConfig {
 		dataPattern: 'sveltekit-remote-functions',
 		resources: { users: true }
 	};
-}
-
-function npmDockerConfig(projectName: string): ResolvedConfig {
-	const config = baseProofConfig(projectName, 'npm');
-	return { ...config, docker: true };
 }
 
 async function generatedFiles(root: string): Promise<string[]> {

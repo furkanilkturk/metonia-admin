@@ -6,7 +6,7 @@ import { lstat, mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { basename, join, relative, resolve } from 'node:path';
 
-import { resolveConfigOrThrow, type ThemeId } from '@metonia-admin/registry';
+import { resolveConfigOrThrow, type IconLibraryId, type ThemeId } from '@metonia-admin/registry';
 
 import { generateProject } from '../../../core/index.js';
 import { createAdminCoreRecipe } from '../../admin-core/index.js';
@@ -21,6 +21,8 @@ import {
 const temporaryRoots: string[] = [];
 const generatedIntegrationTest =
 	process.env.METONIA_RUN_GENERATED_UI_INTEGRATION === '1' ? test : test.skip;
+const generatedIconIntegrationTest =
+	process.env.METONIA_RUN_GENERATED_ICON_INTEGRATION === '1' ? test : test.skip;
 
 afterEach(async () => {
 	await Promise.all(temporaryRoots.splice(0).map(removeTestRoot));
@@ -55,7 +57,15 @@ describe('shadcn-svelte admin workbench recipes', () => {
 		});
 		expect(await exists(join(destination, 'src/lib/components/ui'))).toBeFalse();
 
-		for (const primitive of ['button', 'card', 'dialog', 'dropdown-menu', 'input', 'table']) {
+		for (const primitive of [
+			'button',
+			'card',
+			'dialog',
+			'dropdown-menu',
+			'input',
+			'select',
+			'table'
+		]) {
 			expect(
 				await exists(join(destination, 'src/lib/client/ui/components', primitive, 'index.ts'))
 			).toBeTrue();
@@ -169,6 +179,35 @@ describe('shadcn-svelte admin workbench recipes', () => {
 		expect(generatedStyles.size).toBe(themes.length);
 	}, 60_000);
 
+	test('renders every shadcn-svelte icon-library choice into config, code, and dependencies', async () => {
+		const root = await createTestRoot();
+		const libraries = {
+			lucide: '@lucide/svelte',
+			tabler: '@tabler/icons-svelte',
+			hugeicons: '@hugeicons/svelte',
+			phosphor: 'phosphor-svelte',
+			remixicon: 'remixicon-svelte'
+		} as const satisfies Readonly<Record<IconLibraryId, string>>;
+
+		for (const [iconLibrary, dependency] of Object.entries(libraries) as [
+			IconLibraryId,
+			string
+		][]) {
+			const destination = join(root, iconLibrary);
+			const result = await generateWorkbench(destination, 'zinc', iconLibrary);
+			if (!result.ok) throw new Error(`${iconLibrary}: ${JSON.stringify(result.error)}`);
+			const components = JSON.parse(await readFile(join(destination, 'components.json'), 'utf8'));
+			const packageJson = JSON.parse(await readFile(join(destination, 'package.json'), 'utf8'));
+			const appIcon = await readFile(
+				join(destination, 'src/lib/client/ui/components/app-icon.svelte'),
+				'utf8'
+			);
+			expect(components.iconLibrary).toBe(iconLibrary);
+			expect(packageJson.dependencies[dependency]).toBeString();
+			expect(appIcon).toContain(dependency);
+		}
+	}, 60_000);
+
 	generatedIntegrationTest(
 		'installs, checks, tests, and builds the fresh Bun workbench',
 		async () => {
@@ -192,13 +231,53 @@ describe('shadcn-svelte admin workbench recipes', () => {
 		},
 		180_000
 	);
+
+	generatedIconIntegrationTest(
+		'checks and builds every non-default shadcn-svelte icon library',
+		async () => {
+			const root = await createTestRoot();
+			const bunExecutable = process.env.METONIA_GENERATED_BUN_EXECUTABLE ?? 'bun';
+
+			for (const iconLibrary of [
+				'tabler',
+				'hugeicons',
+				'phosphor',
+				'remixicon'
+			] as const satisfies readonly IconLibraryId[]) {
+				const destination = join(root, iconLibrary);
+				const result = await generateWorkbench(destination, 'zinc', iconLibrary);
+				expect(result.ok).toBeTrue();
+				if (!result.ok) throw new Error(`${iconLibrary}: ${JSON.stringify(result.error)}`);
+
+				for (const arguments_ of [
+					['install'],
+					['run', 'check'],
+					['run', 'test'],
+					['run', 'build']
+				]) {
+					const command = await runCommand(bunExecutable, arguments_, destination);
+					if (command.exitCode !== 0) {
+						console.info(
+							`[${iconLibrary}] $ ${bunExecutable} ${arguments_.join(' ')}\n${command.stdout}\n${command.stderr}`
+						);
+					}
+					expect(command.exitCode).toBe(0);
+				}
+			}
+		},
+		600_000
+	);
 });
 
-function generateWorkbench(destination: string, theme: ThemeId = 'zinc') {
+function generateWorkbench(
+	destination: string,
+	theme: ThemeId = 'zinc',
+	iconLibrary: IconLibraryId = 'lucide'
+) {
 	const config = resolveConfigOrThrow({
 		projectName: 'metonia-workbench',
 		packageManager: 'bun',
-		ui: { adapter: 'shadcn-svelte', theme },
+		ui: { adapter: 'shadcn-svelte', theme, iconLibrary },
 		dataPattern: 'sveltekit-standard',
 		docker: false,
 		resources: { users: false }

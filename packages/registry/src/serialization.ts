@@ -9,6 +9,7 @@ import {
 	type DatabaseDriverId,
 	type DatabaseProviderId,
 	type DataPatternId,
+	type IconLibraryId,
 	type OrmId,
 	type PackageManagerId,
 	type ResolvedConfig,
@@ -21,7 +22,11 @@ export interface GeneratedConfig {
 	readonly schemaVersion: ConfigSchemaVersion;
 	readonly project: { readonly name: string };
 	readonly packageManager: PackageManagerId;
-	readonly ui: { readonly library: UiAdapterId; readonly theme: ThemeId };
+	readonly ui: {
+		readonly library: UiAdapterId;
+		readonly theme: ThemeId;
+		readonly iconLibrary: IconLibraryId;
+	};
 	readonly dataPattern: DataPatternId;
 	readonly validation: { readonly library: ValidationId };
 	readonly database: {
@@ -39,7 +44,11 @@ export function toGeneratedConfig(config: ResolvedConfig | ConfigSelection): Gen
 		schemaVersion: CONFIG_SCHEMA_VERSION,
 		project: { name: config.projectName },
 		packageManager: config.packageManager,
-		ui: { library: config.ui.adapter, theme: config.ui.theme },
+		ui: {
+			library: config.ui.adapter,
+			theme: config.ui.theme,
+			iconLibrary: config.ui.iconLibrary
+		},
 		dataPattern: config.dataPattern,
 		validation: { library: config.validation },
 		database: {
@@ -83,7 +92,11 @@ export function parseGeneratedConfig(serialized: string): ConfigResolutionResult
 		schemaVersion: config.schemaVersion,
 		projectName: config.project.name,
 		packageManager: config.packageManager,
-		ui: { adapter: config.ui.library, theme: config.ui.theme },
+		ui: {
+			adapter: config.ui.library,
+			theme: config.ui.theme,
+			iconLibrary: config.ui.iconLibrary
+		},
 		dataPattern: config.dataPattern,
 		validation: config.validation.library,
 		orm: config.database.orm,
@@ -173,6 +186,7 @@ function validateGeneratedConfigShape(value: unknown): readonly ConfigIssue[] {
 	const ui = requireRecord(value, 'ui', 'ui', issues);
 	requireString(ui, 'library', 'ui.library', issues);
 	requireString(ui, 'theme', 'ui.theme', issues);
+	requireString(ui, 'iconLibrary', 'ui.iconLibrary', issues);
 	requireString(value, 'dataPattern', 'dataPattern', issues);
 	const validation = requireRecord(value, 'validation', 'validation', issues);
 	requireString(validation, 'library', 'validation.library', issues);

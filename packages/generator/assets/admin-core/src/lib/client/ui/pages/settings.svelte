@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Button } from '$lib/client/ui/components/button/index.js';
+	import AppIcon from '$lib/client/ui/components/app-icon.svelte';
 	import SettingsSummary from '$lib/client/ui/views/settings/settingsSummary.svelte';
-	import ArrowLeftIcon from '@lucide/svelte/icons/arrow-left';
 
 	const settings = [
 		{
@@ -47,7 +47,7 @@
 			</p>
 		</div>
 		<Button href="/dashboard" variant="outline" class="h-11 w-fit gap-2 sm:h-9">
-			<ArrowLeftIcon data-icon="inline-start" aria-hidden="true" />
+			<AppIcon name="arrow-left" data-icon="inline-start" aria-hidden="true" />
 			Back to dashboard
 		</Button>
 	</header>

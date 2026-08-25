@@ -148,7 +148,7 @@ function remoteConfig(
 		schemaVersion: 1,
 		projectName: 'remote-proof',
 		packageManager: 'bun',
-		ui: { adapter: 'shadcn-svelte', theme: 'zinc' },
+		ui: { adapter: 'shadcn-svelte', theme: 'zinc', iconLibrary: 'lucide' },
 		dataPattern: overrides.dataPattern ?? 'sveltekit-remote-functions',
 		validation: 'zod',
 		orm: 'drizzle',

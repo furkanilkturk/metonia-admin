@@ -12,7 +12,9 @@ Metonia Admin supports UI-library-specific generation while preserving one admin
 
 UI libraries are modeled as adapters. A UI adapter owns its install behavior, component mapping, theme definitions, theme application, required CSS, icon integration, and support status.
 
-Theme selection is nested under the selected UI adapter. The CLI and website ask for UI library first, then themes valid for that library only. Invalid cross-adapter themes fail config validation.
+Theme and icon-library selection are nested under the selected UI adapter. The CLI and website ask for UI library first, then themes and icon families valid for that library only. Invalid cross-adapter selections fail config validation.
+
+The shadcn-svelte adapter exposes the five icon-library IDs supported by its current configuration schema: `lucide`, `tabler`, `hugeicons`, `phosphor`, and `remixicon`. Generated shell code consumes a semantic icon component so the selected family applies to both Metonia views and checked-in shadcn primitives.
 
 shadcn-svelte is the first complete adapter once verified against current official tooling. Its generated primitives must live in or map to `$lib/client/ui/components`, not an unrelated default component path.
 
@@ -22,8 +24,10 @@ Fluid UI remains blocked/unavailable until its authoritative package name, insta
 
 - UI adapter choice must not change the components/views/pages layering.
 - Themes belong to adapters.
+- Icon libraries belong to adapters.
 - No global theme list.
 - UI selection precedes theme selection.
+- UI selection precedes icon-library selection.
 - shadcn-svelte primitives target `$lib/client/ui/components`.
 - Accessibility primitives from the UI library should be used where available.
 - Fluid UI capabilities remain blocked until verified.
@@ -45,6 +49,13 @@ To add a UI library:
 4. Add generator recipes and integration tests.
 5. Keep Dashboard, Users, views, pages, and routes structurally unchanged.
 
+To add an icon family:
+
+1. Verify that the selected UI adapter officially supports it.
+2. Add its exact packages and semantic icon mapping to that adapter.
+3. Generate, install, check, test, and build a project using the family.
+4. Keep application views importing only the adapter-owned semantic icon component.
+
 ## Consequences
 
 - Another UI library can be added without rewriting data or resource architecture.
@@ -56,11 +67,11 @@ To add a UI library:
 
 - Verify current shadcn-svelte CLI commands, init/add behavior, presets, themes, registry behavior, non-interactive flags, and alias configuration.
 - Verify current Fluid UI authoritative details before enabling generation.
-- Verify all stable UI/theme combinations through generated-project install, check, test, and build.
+- Verify all stable UI/theme/icon combinations through generated-project install, check, test, and build.
 
 ## Test Implications
 
-- Unit-test theme lookup and invalid cross-adapter theme rejection.
+- Unit-test theme/icon lookup and invalid cross-adapter ownership rejection.
 - Integration-test shadcn-svelte output path and component imports.
-- Website configurator tests must prove changing UI library changes available themes.
+- Website configurator tests must prove changing UI library changes available themes and icon families.
 - Accessibility tests must cover generated menus, dialogs, forms, tables, focus states, and responsive navigation.

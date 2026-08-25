@@ -115,10 +115,10 @@ export function createRecipePlan(config: ResolvedConfig): RecipePlan {
 			'The experimental Remote Functions query proof does not implement Users CRUD parity; disable Users or select Standard SvelteKit.'
 		);
 	}
-	if (config.docker && config.packageManager !== 'bun') {
+	if (config.docker && packageManager.docker === undefined) {
 		throw new RecipePlanError(
 			'DOCKER_NOT_IMPLEMENTED',
-			`Docker output has passed its package-manager contract only with Bun; received "${config.packageManager}".`
+			`Docker output is unavailable for the "${config.packageManager}" package-manager adapter.`
 		);
 	}
 
@@ -167,6 +167,7 @@ export async function generateConfiguredProject(
 	dependencies: GenerateProjectDependencies = {}
 ): Promise<GenerateResult> {
 	let plan: RecipePlan;
+	reportPlanProgress(dependencies, 'started');
 	try {
 		plan = createRecipePlan(request.config);
 	} catch (error) {
@@ -188,6 +189,7 @@ export async function generateConfiguredProject(
 			stages: []
 		};
 	}
+	reportPlanProgress(dependencies, 'completed');
 
 	const result = await generateProject(
 		{
@@ -212,6 +214,17 @@ export async function generateConfiguredProject(
 		...result,
 		stages: [{ stage: 'resolve-plan', status: 'completed' }, ...result.stages]
 	};
+}
+
+function reportPlanProgress(
+	dependencies: GenerateProjectDependencies,
+	status: 'started' | 'completed'
+): void {
+	try {
+		dependencies.onProgress?.(Object.freeze({ stage: 'resolve-plan', status }));
+	} catch {
+		// Progress observers are presentation-only and must not affect plan resolution.
+	}
 }
 
 function emptyFacts(): GenerateResult['facts'] {

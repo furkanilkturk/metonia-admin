@@ -1,20 +1,20 @@
 <script lang="ts">
 	import * as Card from '$lib/client/ui/components/card/index.js';
+	import AppIcon from '$lib/client/ui/components/app-icon.svelte';
 	import type { DashboardActivity } from '$lib/shared/types/dashboard.js';
-	import ArrowUpRightIcon from '@lucide/svelte/icons/arrow-up-right';
 
 	let { activities }: { activities: readonly DashboardActivity[] } = $props();
 </script>
 
-<Card.Root class="h-fit rounded-2xl">
-	<Card.Header class="border-b border-border pb-5">
+<Card.Root class="h-fit rounded-xl shadow-sm">
+	<Card.Header class="border-b border-border pb-4">
 		<div class="flex items-center justify-between gap-3">
 			<div>
 				<Card.Title class="font-heading text-lg">Live handoff</Card.Title>
 				<Card.Description class="mt-1">The context your team needs next.</Card.Description>
 			</div>
 			<span class="grid size-9 place-items-center rounded-full bg-brand/10 text-brand" aria-hidden="true">
-				<ArrowUpRightIcon class="size-4" />
+				<AppIcon name="arrow-up-right" class="size-4" />
 			</span>
 		</div>
 	</Card.Header>

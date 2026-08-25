@@ -29,7 +29,7 @@ describe('shadcn-svelte 1.5.0 preset mapping', () => {
 			chartColor: 'teal',
 			font: 'source-sans-3',
 			fontHeading: 'space-grotesk',
-			iconLibrary: 'lucide',
+			presetIconLibrary: 'lucide',
 			menuAccent: 'subtle',
 			menuColor: 'default',
 			radius: 'medium',

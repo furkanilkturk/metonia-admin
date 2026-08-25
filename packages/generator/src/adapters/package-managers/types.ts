@@ -4,6 +4,13 @@ import type { StagedCommandPlan } from '../../contracts/index.js';
 
 export type PackageManagerGenerationStatus = 'implemented' | 'blocked';
 
+export interface PackageManagerDockerPlan {
+	readonly buildImage: string;
+	readonly dependencyFiles: readonly string[];
+	readonly setupCommands: readonly StagedCommandPlan[];
+	readonly productionInstallCommand: StagedCommandPlan;
+}
+
 /**
  * Package-manager behavior is expressed as executable plus argv. Callers never interpolate a
  * shell command, which keeps project names and paths inert when the generator runs a plan.
@@ -20,6 +27,8 @@ export interface PackageManagerAdapter {
 	readonly initialLockfileContents?: string;
 	/** Manager-owned project configuration required for deterministic, policy-compliant installs. */
 	readonly configurationFiles: Readonly<Record<string, string>>;
+	/** Package-manager-owned inputs and commands for a deterministic container build. */
+	readonly docker?: PackageManagerDockerPlan;
 	readonly installCommand: StagedCommandPlan;
 	readonly frozenInstallCommand: StagedCommandPlan;
 	add(packages: readonly string[]): StagedCommandPlan;
@@ -46,4 +55,10 @@ export interface PackageManagerAdapterDefinition {
 	readonly packageSpecifierPrefix?: string;
 	readonly initialLockfileContents?: string;
 	readonly configurationFiles?: Readonly<Record<string, string>>;
+	readonly docker?: {
+		readonly buildImage: string;
+		readonly dependencyFiles: readonly string[];
+		readonly setupCommands?: readonly (readonly string[])[];
+		readonly productionInstall: readonly string[];
+	};
 }

@@ -9,5 +9,6 @@ export {
 export type {
 	PackageManagerAdapter,
 	PackageManagerAdapterDefinition,
+	PackageManagerDockerPlan,
 	PackageManagerGenerationStatus
 } from './types.js';

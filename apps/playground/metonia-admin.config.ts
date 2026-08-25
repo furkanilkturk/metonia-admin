@@ -6,7 +6,8 @@ export default {
 	"packageManager": "bun",
 	"ui": {
 		"library": "shadcn-svelte",
-		"theme": "zinc"
+		"theme": "zinc",
+		"iconLibrary": "lucide"
 	},
 	"dataPattern": "sveltekit-remote-functions",
 	"validation": {
