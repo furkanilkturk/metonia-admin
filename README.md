@@ -44,7 +44,7 @@ npx create-metonia-admin@latest acme-admin \
   --no-git
 ```
 
-Use `--json` for a single versioned machine-readable result. Invalid combinations fail before a destination is written. `create-metonia-admin@0.1.2` is published on npm with the `latest` tag; clean external `npx`, `npm create`, and `bunx` invocations passed. Project staging now stays outside an open destination workspace when the system temporary directory is on the same filesystem, preventing Windows editor watchers from blocking final publication.
+Use `--json` for a single versioned machine-readable result. Invalid combinations fail before a destination is written. `create-metonia-admin@0.1.3` is published on npm with the `latest` tag; clean external `npx`, `npm create`, and `bunx` invocations passed. Interactive terminals show a live activity indicator while the project is generated, dependencies are installed, and Git is initialized; JSON and non-TTY modes stay animation-free. Project staging stays outside an open destination workspace when the system temporary directory is on the same filesystem, preventing Windows editor watchers from blocking final publication.
 
 ## What is generated
 
