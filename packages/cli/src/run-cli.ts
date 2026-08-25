@@ -2,7 +2,7 @@
 
 import { basename, resolve } from 'node:path';
 
-import { confirm, isCancel, note, select, text } from '@clack/prompts';
+import { confirm, isCancel, note, select, spinner, text } from '@clack/prompts';
 import {
 	generateConfiguredProject,
 	type GenerateResult,
@@ -74,6 +74,13 @@ export interface CliIo {
 	readonly stdout: (value: string) => void;
 	readonly stderr: (value: string) => void;
 	readonly prompts?: PromptAdapter;
+	readonly createActivity?: () => CliActivityIndicator;
+}
+
+export interface CliActivityIndicator {
+	start(message: string): void;
+	stop(message: string): void;
+	error(message: string): void;
 }
 
 export interface CliGenerationRequest {
@@ -219,13 +226,26 @@ export async function runCli(
 			await confirmRemoteFunctions(requirePrompts(dependencies.io));
 		}
 
-		const generation = await (dependencies.generate ?? generateConfiguredProject)({
-			config: resolution.config,
-			destination: requireDestination(selection.destination),
-			install: selection.install ?? true,
-			git: selection.git ?? true
-		});
-		if (!generation.ok) throw fromGenerationError(generation.error);
+		const install = selection.install ?? true;
+		const git = selection.git ?? true;
+		const activity =
+			dependencies.io.isInteractive && !json ? dependencies.io.createActivity?.() : undefined;
+		activity?.start(generationActivityMessage(install, git));
+
+		let generation: GenerateResult;
+		try {
+			generation = await (dependencies.generate ?? generateConfiguredProject)({
+				config: resolution.config,
+				destination: requireDestination(selection.destination),
+				install,
+				git
+			});
+			if (!generation.ok) throw fromGenerationError(generation.error);
+			activity?.stop('Project generated successfully');
+		} catch (error) {
+			activity?.error('Project generation failed');
+			throw error;
+		}
 
 		const result: CliResult = {
 			version: CLI_RESULT_VERSION,
@@ -242,6 +262,13 @@ export async function runCli(
 		emitResult(result, dependencies.io, json);
 		return { exitCode: exitCodeFor(details), result };
 	}
+}
+
+function generationActivityMessage(install: boolean, git: boolean): string {
+	if (install && git) return 'Creating project, installing dependencies, and initializing Git';
+	if (install) return 'Creating project and installing dependencies';
+	if (git) return 'Creating project and initializing Git';
+	return 'Creating project';
 }
 
 function collectNonInteractiveSelection(parsed: ParsedArguments): CliSelection {
@@ -600,7 +627,8 @@ export function createNodeCliIo(): CliIo {
 		isInteractive: Boolean(process.stdin.isTTY && process.stdout.isTTY),
 		stdout: (value) => process.stdout.write(value),
 		stderr: (value) => process.stderr.write(value),
-		prompts: createClackPromptAdapter()
+		prompts: createClackPromptAdapter(),
+		createActivity: () => spinner({ indicator: 'dots' })
 	};
 }
 

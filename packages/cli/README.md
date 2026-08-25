@@ -13,6 +13,10 @@ With no destination argument, the wizard asks for a project name and suggests
 destination to generate into the current directory, which must be empty, or type
 another relative or absolute path.
 
+Interactive terminals show a live activity indicator while the project is generated,
+dependencies are installed, and Git is initialized. JSON and non-TTY modes remain free
+of terminal animation.
+
 The same CLI can be launched with any of these package-runner forms:
 
 ```bash

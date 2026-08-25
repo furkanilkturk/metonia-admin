@@ -5,7 +5,7 @@ import { describe, expect, test } from 'bun:test';
 import type { GenerateResult } from '@metonia-admin/generator';
 import type { ResolvedConfig } from '@metonia-admin/registry';
 
-import { runCli, type CliIo, type PromptAdapter } from './run-cli.js';
+import { runCli, type CliActivityIndicator, type CliIo, type PromptAdapter } from './run-cli.js';
 
 const defaultFlagArguments = [
 	'example-app',
@@ -49,7 +49,13 @@ function successfulGeneration(request: {
 	});
 }
 
-function io(options: { interactive?: boolean; prompts?: PromptAdapter } = {}): {
+function io(
+	options: {
+		activity?: CliActivityIndicator;
+		interactive?: boolean;
+		prompts?: PromptAdapter;
+	} = {}
+): {
 	io: CliIo;
 	stdout: string[];
 	stderr: string[];
@@ -61,7 +67,10 @@ function io(options: { interactive?: boolean; prompts?: PromptAdapter } = {}): {
 			isInteractive: options.interactive ?? false,
 			stdout: (value) => stdout.push(value),
 			stderr: (value) => stderr.push(value),
-			...(options.prompts === undefined ? {} : { prompts: options.prompts })
+			...(options.prompts === undefined ? {} : { prompts: options.prompts }),
+			...(options.activity === undefined
+				? {}
+				: { createActivity: () => options.activity as CliActivityIndicator })
 		},
 		stdout,
 		stderr
@@ -369,7 +378,87 @@ describe('runCli', () => {
 		expect(output.stderr.join('')).toContain('Project name must normalize');
 		expect(output.stderr.join('')).not.toContain('multi-OS');
 	});
+
+	test('shows generation activity in a TTY and closes it for success and failure', async () => {
+		const successEvents: string[] = [];
+		const successOutput = io({
+			activity: recordingActivity(successEvents),
+			interactive: true
+		});
+		const success = await runCli(['activity-admin', '--yes'], {
+			io: successOutput.io,
+			generate: successfulGeneration
+		});
+
+		expect(success.exitCode).toBe(0);
+		expect(successEvents).toEqual([
+			'start:Creating project, installing dependencies, and initializing Git',
+			'stop:Project generated successfully'
+		]);
+
+		const failureEvents: string[] = [];
+		const failureOutput = io({
+			activity: recordingActivity(failureEvents),
+			interactive: true
+		});
+		const failure = await runCli(['activity-admin', '--yes'], {
+			io: failureOutput.io,
+			generate: async (request) => ({
+				ok: false,
+				destination: request.destination,
+				facts: {
+					checks: [],
+					dependencies: { dependencies: {}, devDependencies: {} },
+					documentFacts: {},
+					scripts: {}
+				},
+				stages: [],
+				error: {
+					code: 'FINALIZATION_FAILED',
+					message: 'Unable to publish.',
+					stage: 'finalize'
+				}
+			})
+		});
+
+		expect(failure.exitCode).toBe(2);
+		expect(failureEvents).toEqual([
+			'start:Creating project, installing dependencies, and initializing Git',
+			'error:Project generation failed'
+		]);
+	});
+
+	test('keeps activity disabled for JSON and non-TTY output', async () => {
+		const jsonEvents: string[] = [];
+		const jsonOutput = io({
+			activity: recordingActivity(jsonEvents),
+			interactive: true
+		});
+		await runCli(['json-activity-admin', '--yes', '--json'], {
+			io: jsonOutput.io,
+			generate: successfulGeneration
+		});
+
+		const nonTtyEvents: string[] = [];
+		const nonTtyOutput = io({ activity: recordingActivity(nonTtyEvents) });
+		await runCli(['non-tty-activity-admin', '--yes'], {
+			io: nonTtyOutput.io,
+			generate: successfulGeneration
+		});
+
+		expect(jsonEvents).toEqual([]);
+		expect(nonTtyEvents).toEqual([]);
+		expect(jsonOutput.stdout).toHaveLength(1);
+	});
 });
+
+function recordingActivity(events: string[]): CliActivityIndicator {
+	return {
+		start: (message) => events.push(`start:${message}`),
+		stop: (message) => events.push(`stop:${message}`),
+		error: (message) => events.push(`error:${message}`)
+	};
+}
 
 function selectionOf(run: Awaited<ReturnType<typeof runCli>>): unknown {
 	if (!run.result.ok) return run.result;
