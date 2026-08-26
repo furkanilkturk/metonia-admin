@@ -40,7 +40,7 @@ const expected = {
 	},
 	yarn: {
 		field: 'yarn@4.18.0',
-		install: ['yarn', 'install'],
+		install: ['yarn', 'install', '--no-immutable'],
 		frozen: ['yarn', 'install', '--immutable'],
 		lockfile: 'yarn.lock',
 		run: ['yarn', 'run', 'check'],

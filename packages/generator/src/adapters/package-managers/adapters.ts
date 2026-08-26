@@ -102,7 +102,7 @@ const definitions = Object.freeze({
 		lockfile: 'yarn.lock',
 		generationStatus: 'implemented',
 		executable: 'yarn',
-		install: ['install'],
+		install: ['install', '--no-immutable'],
 		frozenInstall: ['install', '--immutable'],
 		add: ['add'],
 		addDev: ['add', '--dev'],
