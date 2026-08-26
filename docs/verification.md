@@ -52,6 +52,8 @@ npm 12.0.2 packed the CLI into a 1,458,188-byte tarball (5,232,694 bytes unpacke
 
 A clean tarball installation under Node 22.23.2 passed `--help` and generated an npm + Docker + Remix Icon project with matching `components.json`, dependency, and Dockerfile output. After npm processing completed, the public registry reported `latest` as `0.1.5`. A fresh-cache public `npx create-metonia-admin@0.1.5` run generated an npm + Docker + Tabler project with one valid JSON result and the expected lock-aware Docker commands; a separate no-cache public `bunx create-metonia-admin@0.1.5 --help` invocation also passed.
 
+`create-metonia-admin@0.1.7` was published with a 1,481,375-byte tarball (5,324,573 bytes unpacked, 200 entries) after the complete GitHub Actions release matrix passed in run `32956520703`: ordinary quality gates, exact Bun/npm/pnpm/Yarn generated-project jobs, generated Bun surfaces, and PostgreSQL Users runtime behavior. The public registry reported `latest` as `0.1.7`, its published SHA-512 integrity matched the locally inspected tarball, and the binary mapping remained `create-metonia-admin -> dist/create-metonia-admin.js`. A fresh-cache public `npm exec --package=create-metonia-admin@0.1.7` smoke test passed `--help` and generated the default project with one valid JSON result, `metonia-admin.config.ts`, no dependency installation, and no Git repository.
+
 ### Default Standard project
 
 The bundled Node CLI generated a fresh default application into a path containing spaces with dependency installation enabled. The output included Dashboard, Settings, full Users, zinc shadcn-svelte UI, Zod, Drizzle, generic PostgreSQL/`pg`, configuration-aware documentation, and no Metonia runtime dependency.
