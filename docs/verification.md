@@ -27,9 +27,11 @@ The exact generated versions are also pinned by the generator. Deno 2.9.5 is rep
 - Install-enabled generation now probes the selected package manager and fails during `resolve-plan`, before staging, unless its reported version exactly matches the adapter's pinned `packageManager` version. The ordinary local suite verified the expected Bun 1.3.14 rejection, while a temporary PATH using Bun 1.4.0 completed fresh CLI generation, install, frozen install, Svelte check, Vitest, adapter-node build, and audit.
 - Timed-out staged commands now terminate their process tree. A Windows regression launches a descendant that would write a delayed marker; timeout cleanup killed both processes, left no marker, and removed unpublished staging output.
 - Root and freshly generated Bun dependency graphs use reviewed patched `cookie@0.7.2` and `esbuild@0.28.2` resolutions. Both `bun audit` runs reported no vulnerabilities.
+- pnpm 11 security overrides live in `pnpm-workspace.yaml`, where the current CLI reads them, rather than the retired `package.json#pnpm` field. A fresh pnpm 11.23.0 project completed install, frozen install, check, test, and build without the ignored-configuration warning.
 - Compose was rendered with a synthetic password containing spaces and URL/Compose-significant punctuation. The value remained in `PGPASSWORD`, did not enter `DATABASE_URL`, and the Docker recipe tests passed for Bun, npm, pnpm, and Yarn output.
 - `apps/reference-admin` and `apps/playground` were regenerated from the built CLI. Their README evidence, icon typing, navigation matching, Dashboard ID search, database client, and package-manifest security policy now match fresh output.
 - `.github/workflows/ci.yml` now runs the ordinary Bun-first gates, each exact generated-package-manager matrix row, the opt-in Bun Remote/Users/UI/icon builds, and the disposable PostgreSQL Users runtime gate. The matrix test accepts a CI-only manager selector so each job installs and exercises one exact toolchain without weakening the all-manager local opt-in mode.
+- Windows generated-project jobs use the runner's canonical temporary directory instead of its legacy 8.3 alias, preventing SvelteKit/Vite manifest paths from mixing `RUNNER~1` with the long runner account name.
 
 ### Portable CLI artifact
 

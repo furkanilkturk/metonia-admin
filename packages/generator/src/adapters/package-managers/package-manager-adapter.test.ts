@@ -89,7 +89,7 @@ describe('generated-project package-manager adapters', () => {
 		);
 	});
 
-	test('keeps security resolutions in package-manager-owned manifest fields', () => {
+	test('keeps security resolutions in package-manager-owned configuration', () => {
 		expect(getPackageManagerAdapter('bun').manifestFields).toEqual({
 			overrides: { cookie: '0.7.2', esbuild: '0.28.2' }
 		});
@@ -99,7 +99,10 @@ describe('generated-project package-manager adapters', () => {
 				'@sveltejs/kit': { cookie: '0.7.2' }
 			}
 		});
-		expect(getPackageManagerAdapter('pnpm').manifestFields).toHaveProperty('pnpm.overrides');
+		expect(getPackageManagerAdapter('pnpm').manifestFields).toEqual({});
+		expect(getPackageManagerAdapter('pnpm').configurationFiles['pnpm-workspace.yaml']).toContain(
+			'overrides:\n  "@esbuild-kit/core-utils>esbuild": "0.28.2"\n  "@sveltejs/kit>cookie": "0.7.2"'
+		);
 		expect(getPackageManagerAdapter('yarn').manifestFields).toHaveProperty('resolutions');
 	});
 
@@ -120,7 +123,7 @@ describe('generated-project package-manager adapters', () => {
 	test('keeps current install safety gates explicit and narrowly approved', () => {
 		expect(getPackageManagerAdapter('pnpm').configurationFiles).toEqual({
 			'pnpm-workspace.yaml':
-				'allowBuilds:\n  esbuild: true\n  "@hugeicons/svelte@1.1.5": true\nminimumReleaseAgeExclude:\n  - "@lucide/svelte@1.34.0"\n  - "@tabler/icons-svelte@3.46.0"\n  - "@hugeicons/svelte@1.1.5"\n  - "@hugeicons/core-free-icons@4.3.0"\n  - "phosphor-svelte@3.1.0"\n  - "remixicon-svelte@0.0.5"\n'
+				'overrides:\n  "@esbuild-kit/core-utils>esbuild": "0.28.2"\n  "@sveltejs/kit>cookie": "0.7.2"\nallowBuilds:\n  esbuild: true\n  "@hugeicons/svelte@1.1.5": true\nminimumReleaseAgeExclude:\n  - "@lucide/svelte@1.34.0"\n  - "@tabler/icons-svelte@3.46.0"\n  - "@hugeicons/svelte@1.1.5"\n  - "@hugeicons/core-free-icons@4.3.0"\n  - "phosphor-svelte@3.1.0"\n  - "remixicon-svelte@0.0.5"\n'
 		});
 		expect(getPackageManagerAdapter('yarn').configurationFiles).toEqual({
 			'.yarnrc.yml':

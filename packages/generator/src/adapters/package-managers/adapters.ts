@@ -84,17 +84,9 @@ const definitions = Object.freeze({
 		addDev: ['add', '--save-dev'],
 		run: ['run'],
 		exec: ['dlx'],
-		manifestFields: {
-			pnpm: {
-				overrides: {
-					'@esbuild-kit/core-utils>esbuild': '0.28.2',
-					'@sveltejs/kit>cookie': '0.7.2'
-				}
-			}
-		},
 		configurationFiles: {
 			'pnpm-workspace.yaml':
-				'allowBuilds:\n  esbuild: true\n  "@hugeicons/svelte@1.1.5": true\nminimumReleaseAgeExclude:\n  - "@lucide/svelte@1.34.0"\n  - "@tabler/icons-svelte@3.46.0"\n  - "@hugeicons/svelte@1.1.5"\n  - "@hugeicons/core-free-icons@4.3.0"\n  - "phosphor-svelte@3.1.0"\n  - "remixicon-svelte@0.0.5"\n'
+				'overrides:\n  "@esbuild-kit/core-utils>esbuild": "0.28.2"\n  "@sveltejs/kit>cookie": "0.7.2"\nallowBuilds:\n  esbuild: true\n  "@hugeicons/svelte@1.1.5": true\nminimumReleaseAgeExclude:\n  - "@lucide/svelte@1.34.0"\n  - "@tabler/icons-svelte@3.46.0"\n  - "@hugeicons/svelte@1.1.5"\n  - "@hugeicons/core-free-icons@4.3.0"\n  - "phosphor-svelte@3.1.0"\n  - "remixicon-svelte@0.0.5"\n'
 		},
 		docker: {
 			buildImage: 'node:24.19.0-bookworm-slim',

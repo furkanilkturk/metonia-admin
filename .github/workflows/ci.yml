@@ -60,11 +60,14 @@ jobs:
       - if: matrix.manager == 'yarn'
         run: |
           npm install --global corepack@0.34.6
+          corepack enable
           corepack install --global yarn@4.18.0
       - run: bun test packages/generator/src/recipe-plan.test.ts
         env:
           METONIA_RUN_GENERATED_PACKAGE_MANAGER_INTEGRATION: '1'
           METONIA_GENERATED_PACKAGE_MANAGER: ${{ matrix.manager }}
+          TEMP: ${{ runner.temp }}
+          TMP: ${{ runner.temp }}
 
   generated-bun-surfaces:
     runs-on: windows-latest
@@ -91,6 +94,8 @@ jobs:
           METONIA_RUN_GENERATED_USERS_INTEGRATION: '1'
           METONIA_RUN_GENERATED_UI_INTEGRATION: '1'
           METONIA_RUN_GENERATED_ICON_INTEGRATION: '1'
+          TEMP: ${{ runner.temp }}
+          TMP: ${{ runner.temp }}
 
   users-postgres:
     runs-on: ubuntu-latest

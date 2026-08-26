@@ -50,7 +50,7 @@ Recipes may contribute files, dependencies, configuration, transformations, comm
 - Write `metonia-admin.config.ts`, generated `AGENTS.md`, and generated `README.md` from resolved configuration.
 - Generated code remains maintainable without the Metonia CLI.
 - Package-manager behavior belongs behind package-manager adapters.
-- Package-manager adapters own their version probe and package-manifest security resolution fields.
+- Package-manager adapters own their version probe and manager-native security resolution configuration.
 
 ## Extension Procedure
 
