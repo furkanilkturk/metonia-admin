@@ -71,10 +71,14 @@ describe('Docker recipe', () => {
 		expect(compose).toContain('pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB');
 		expect(compose).toContain('metonia-postgres-data');
 		expect(compose).toContain('DATABASE_URL:');
+		expect(compose).toContain('PGPASSWORD: "${POSTGRES_PASSWORD:');
+		expect(compose).not.toContain(
+			'${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env before starting Compose.}@'
+		);
 		expect(compose).toContain("fetch('http://127.0.0.1:3000/')");
 		expect(compose).toContain('ORIGIN:');
 		expect(compose).toContain('stop_grace_period: 30s');
-		expect(compose).not.toMatch(/^\s*POSTGRES_PASSWORD:\s*(?!\$\{)\S/m);
+		expect(compose).not.toMatch(/^\s*(?:POSTGRES_PASSWORD|PGPASSWORD):\s*(?!"?\$\{)\S/m);
 	});
 
 	test('is a no-op when Docker is disabled', async () => {

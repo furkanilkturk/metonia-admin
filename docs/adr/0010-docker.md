@@ -18,7 +18,7 @@ Dockerfile
 compose.yaml
 ```
 
-For the MVP PostgreSQL stack, Docker generation includes a PostgreSQL service, persistent volume, healthcheck, `DATABASE_URL` wiring, and a one-shot migration service. The application waits for the migration service to complete successfully before starting. A small Node runner applies committed Drizzle migrations with production `drizzle-orm` and `pg` dependencies; it does not carry the selected package manager's development toolchain. This applies migrations explicitly as part of the Compose workflow without coupling schema changes to ordinary application process startup. Node/runtime and production deployment provider details remain neutral until verified.
+For the MVP PostgreSQL stack, Docker generation includes a PostgreSQL service, persistent volume, healthcheck, `DATABASE_URL` wiring, and a one-shot migration service. Compose keeps the raw password out of the URL and passes it through the standard `PGPASSWORD` environment variable; the Node PostgreSQL client supplies that value as a separate pool option. This preserves passwords containing URL-significant characters without committing or logging an encoded credential. The application waits for the migration service to complete successfully before starting. A small Node runner applies committed Drizzle migrations with production `drizzle-orm` and `pg` dependencies; it does not carry the selected package manager's development toolchain. This applies migrations explicitly as part of the Compose workflow without coupling schema changes to ordinary application process startup. Node/runtime and production deployment provider details remain neutral until verified.
 
 The architecture remains open to separating two future choices:
 

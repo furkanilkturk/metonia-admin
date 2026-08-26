@@ -12,6 +12,8 @@ export {
 	generateConfiguredProject,
 	RecipePlanError,
 	type BunRecipePlan,
+	type GenerateConfiguredProjectDependencies,
+	type PackageManagerVersionResolver,
 	type RecipePlan,
 	type RecipePlanErrorCode
 } from './recipe-plan.js';

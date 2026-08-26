@@ -22,9 +22,15 @@ import { generateProject } from './core/index.js';
 import { createBunRecipePlan, createRecipePlan, generateConfiguredProject } from './recipe-plan.js';
 
 const temporaryRoots: string[] = [];
-const generatedIntegrationTest =
-	process.env.METONIA_RUN_GENERATED_PACKAGE_MANAGER_INTEGRATION === '1' ? test : test.skip;
 const implementedPackageManagers = ['bun', 'npm', 'pnpm', 'yarn'] as const;
+const requestedIntegrationManager = process.env.METONIA_GENERATED_PACKAGE_MANAGER;
+
+function generatedIntegrationTest(packageManager: PackageManagerId): typeof test {
+	return process.env.METONIA_RUN_GENERATED_PACKAGE_MANAGER_INTEGRATION === '1' &&
+		(requestedIntegrationManager === undefined || requestedIntegrationManager === packageManager)
+		? test
+		: test.skip;
+}
 
 afterEach(async () => {
 	await Promise.all(temporaryRoots.splice(0).map(removeTestRoot));
@@ -187,6 +193,55 @@ describe('generated-project package-manager recipe plan', () => {
 		expect(await readdir(root)).toEqual([]);
 	});
 
+	test('rejects a mismatched package-manager version before filesystem writes', async () => {
+		const root = await createTestRoot();
+		const destination = join(root, 'wrong-manager-version');
+		const result = await generateConfiguredProject(
+			{
+				config: baseProofConfig('wrong-manager-version'),
+				destination,
+				install: true,
+				git: false
+			},
+			{ resolvePackageManagerVersion: async () => '0.0.0' }
+		);
+
+		expect(result).toMatchObject({
+			ok: false,
+			error: {
+				code: 'PACKAGE_MANAGER_VERSION_MISMATCH',
+				message: expect.stringContaining('Bun 1.4.0 is required'),
+				stage: 'resolve-plan'
+			}
+		});
+		expect(await exists(destination)).toBeFalse();
+		expect(await readdir(root)).toEqual([]);
+	});
+
+	test('runs install only after the selected package-manager version is verified', async () => {
+		const root = await createTestRoot();
+		const destination = join(root, 'verified-manager-version');
+		let installRan = false;
+		const result = await generateConfiguredProject(
+			{
+				config: baseProofConfig('verified-manager-version'),
+				destination,
+				install: true,
+				git: false
+			},
+			{
+				resolvePackageManagerVersion: async (adapter) => adapter.version,
+				runCommand: async () => {
+					installRan = true;
+					return 0;
+				}
+			}
+		);
+
+		expect(result.ok).toBeTrue();
+		expect(installRan).toBeTrue();
+	});
+
 	test('preflights unsupported feature crossings before creating staging output', async () => {
 		const root = await createTestRoot();
 		const cases: readonly [ResolvedConfig, string][] = [
@@ -239,7 +294,7 @@ describe('generated-project package-manager recipe plan', () => {
 	});
 
 	for (const packageManager of implementedPackageManagers) {
-		generatedIntegrationTest(
+		generatedIntegrationTest(packageManager)(
 			`installs, freezes, checks, tests, and builds a fresh ${packageManager} project`,
 			async () => {
 				const destination = join(await createTestRoot(), `${packageManager} integration`);
@@ -326,9 +381,13 @@ async function expectGeneratedContracts(
 		devDependencies: Record<string, string>;
 		packageManager: string;
 		scripts: Record<string, string>;
+		[key: string]: unknown;
 	};
 	const packageManager = getPackageManagerAdapter(config.packageManager);
 	expect(packageJson.packageManager).toBe(packageManager.packageManagerField);
+	for (const [key, value] of Object.entries(packageManager.manifestFields)) {
+		expect(packageJson[key]).toEqual(value);
+	}
 	expect(packageJson.dependencies).toMatchObject({
 		'drizzle-orm': '0.45.2',
 		pg: '8.23.0',

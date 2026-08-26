@@ -1,5 +1,6 @@
 /// <reference types="bun" />
 
+import type { ChildProcess } from 'node:child_process';
 import { lstat, mkdir, mkdtemp, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { basename, dirname, isAbsolute, join, parse, relative, resolve, sep } from 'node:path';
@@ -30,6 +31,7 @@ import {
 import { recipeStageOrder } from '../contracts/stages.js';
 
 export const DEFAULT_STAGED_COMMAND_TIMEOUT_MS = 300_000;
+const PROCESS_TERMINATION_GRACE_MS = 5_000;
 
 interface DestinationState {
 	destination: string;
@@ -309,6 +311,7 @@ function runCommand(invocation: StagedCommandInvocation): Promise<number> {
 	return new Promise((resolveExitCode, rejectExitCode) => {
 		const child = spawn(invocation.executable, invocation.arguments, {
 			cwd: invocation.cwd,
+			detached: process.platform !== 'win32',
 			shell: false,
 			stdio: 'ignore',
 			windowsHide: true
@@ -316,20 +319,71 @@ function runCommand(invocation: StagedCommandInvocation): Promise<number> {
 		let timedOut = false;
 		const timeout = setTimeout(() => {
 			timedOut = true;
-			child.kill('SIGKILL');
+			void terminateProcessTree(child).finally(() => {
+				rejectExitCode(new Error('The staged command timed out.'));
+			});
 		}, invocation.timeoutMs);
 		child.once('error', (error) => {
 			clearTimeout(timeout);
+			if (timedOut) return;
 			rejectExitCode(error);
 		});
 		child.once('close', (code) => {
 			clearTimeout(timeout);
-			if (timedOut) {
-				rejectExitCode(new Error('The staged command timed out.'));
-				return;
-			}
+			if (timedOut) return;
 			resolveExitCode(code ?? -1);
 		});
+	});
+}
+
+async function terminateProcessTree(child: ChildProcess): Promise<void> {
+	if (child.pid === undefined) return;
+
+	if (process.platform === 'win32') {
+		await runTreeKill(child.pid);
+	} else {
+		try {
+			process.kill(-child.pid, 'SIGKILL');
+		} catch {
+			child.kill('SIGKILL');
+		}
+	}
+
+	await waitForChildClose(child);
+}
+
+function waitForChildClose(child: ChildProcess): Promise<void> {
+	if (child.exitCode !== null || child.signalCode !== null) return Promise.resolve();
+	return new Promise((resolveClose) => {
+		const timeout = setTimeout(resolveClose, PROCESS_TERMINATION_GRACE_MS);
+		child.once('close', () => {
+			clearTimeout(timeout);
+			resolveClose();
+		});
+		if (child.exitCode !== null || child.signalCode !== null) {
+			clearTimeout(timeout);
+			resolveClose();
+		}
+	});
+}
+
+function runTreeKill(processId: number): Promise<void> {
+	return new Promise((resolveKill) => {
+		const killer = spawn('taskkill.exe', ['/pid', String(processId), '/t', '/f'], {
+			shell: false,
+			stdio: 'ignore',
+			windowsHide: true
+		});
+		const timeout = setTimeout(() => {
+			killer.kill('SIGKILL');
+			resolveKill();
+		}, PROCESS_TERMINATION_GRACE_MS);
+		const finish = () => {
+			clearTimeout(timeout);
+			resolveKill();
+		};
+		killer.once('error', finish);
+		killer.once('close', finish);
 	});
 }
 

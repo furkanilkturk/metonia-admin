@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24.19.0
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: bun install --frozen-lockfile
+      - run: bun run check
+      - run: bun run lint
+      - run: bun run format:check
+      - run: bun test
+      - run: bun run build
+      - run: bun audit
+
+  generated-package-managers:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        manager: [bun, npm, pnpm, yarn]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24.19.0
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: bun install --frozen-lockfile
+      - run: bun run --cwd packages/generator build
+      - run: bun run --cwd packages/cli build
+      - if: matrix.manager == 'bun'
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+      - if: matrix.manager == 'npm'
+        run: npm install --global npm@12.0.2
+      - if: matrix.manager == 'pnpm'
+        uses: pnpm/action-setup@v6
+        with:
+          version: 11.23.0
+      - if: matrix.manager == 'yarn'
+        run: |
+          npm install --global corepack@0.34.6
+          corepack install --global yarn@4.18.0
+      - run: bun test packages/generator/src/recipe-plan.test.ts
+        env:
+          METONIA_RUN_GENERATED_PACKAGE_MANAGER_INTEGRATION: '1'
+          METONIA_GENERATED_PACKAGE_MANAGER: ${{ matrix.manager }}
+
+  generated-bun-surfaces:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24.19.0
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: bun install --frozen-lockfile
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+      - run: >-
+          bun test
+          packages/generator/src/recipes/data-patterns/sveltekit-remote-functions/sveltekit-remote-functions-recipe.test.ts
+          packages/generator/src/recipes/resources/users/users-resource-recipe.test.ts
+          packages/generator/src/recipes/ui/shadcn-svelte/shadcn-svelte-recipe.test.ts
+        env:
+          METONIA_RUN_GENERATED_REMOTE_INTEGRATION: '1'
+          METONIA_RUN_GENERATED_USERS_INTEGRATION: '1'
+          METONIA_RUN_GENERATED_UI_INTEGRATION: '1'
+          METONIA_RUN_GENERATED_ICON_INTEGRATION: '1'
+
+  users-postgres:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24.19.0
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: bun install --frozen-lockfile
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+      - run: bun test packages/generator/src/recipes/resources/users/users-resource-recipe.test.ts
+        env:
+          METONIA_RUN_USERS_POSTGRES_INTEGRATION: '1'

@@ -98,12 +98,20 @@ async function validateAdminCore(context: StagedValidationContext): Promise<void
 
 	const shell = await context.readFile('src/lib/client/ui/pages/layout/AdminShell.svelte');
 	const dashboard = await context.readFile('src/lib/client/ui/pages/dashboard.svelte');
+	const dashboardState = await context.readFile(
+		'src/lib/client/ui/pages/dashboard/dashboardState.svelte.ts'
+	);
 	const settings = await context.readFile('src/lib/client/ui/pages/settings.svelte');
 	const navigation = await context.readFile('src/lib/client/navigation/adminNavigation.ts');
+	const sidebar = await context.readFile('src/lib/client/ui/views/layout/adminSidebar.svelte');
 	if (
 		!shell.includes('Skip to content') ||
 		!shell.includes('Dialog.Root') ||
 		!shell.includes('lg:hidden') ||
+		!shell.includes('activeAdminNavigationItem(pathname)') ||
+		!sidebar.includes('isAdminNavigationItemActive') ||
+		!navigation.includes('pathname.startsWith(`${href}/`)') ||
+		!dashboardState.includes('operation.id.toLocaleLowerCase().includes(query)') ||
 		!dashboard.includes('<DashboardMetrics') ||
 		!dashboard.includes('<DashboardTable') ||
 		!settings.includes('Authentication') ||

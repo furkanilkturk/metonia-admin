@@ -114,9 +114,18 @@ describe('shadcn-svelte admin workbench recipes', () => {
 		);
 		expect(view).not.toContain('$lib/client/ui/pages');
 		expect(view).not.toContain('$lib/server');
+		const navigation = await readFile(
+			join(destination, 'src/lib/client/navigation/adminNavigation.ts'),
+			'utf8'
+		);
+		expect(navigation).not.toContain("href: '/users'");
+		expect(navigation).toContain('pathname.startsWith(`${href}/`)');
 		expect(
-			await readFile(join(destination, 'src/lib/client/navigation/adminNavigation.ts'), 'utf8')
-		).not.toContain("href: '/users'");
+			await readFile(
+				join(destination, 'src/lib/client/ui/pages/dashboard/dashboardState.svelte.ts'),
+				'utf8'
+			)
+		).toContain('operation.id.toLocaleLowerCase().includes(query)');
 		expect(
 			await readFile(join(destination, 'src/lib/client/ui/pages/dashboard.svelte'), 'utf8')
 		).toContain('<DashboardMetrics');

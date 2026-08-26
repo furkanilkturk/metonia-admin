@@ -38,6 +38,8 @@ Resources
 
 The pipeline resolves and validates configuration before writing project files, then applies ordered stages. Stage failures must identify the failing stage and avoid leaving partial output in the final target directory. The implementation should use staging and atomic finalization where practical.
 
+When dependency installation is requested, plan resolution also verifies that the executable package manager reports the exact adapter version recorded in generated `package.json`. A missing or mismatched executable fails before staging begins, so generated metadata and the tool that creates the lockfile cannot silently disagree.
+
 Recipes may contribute files, dependencies, configuration, transformations, commands, and checks. They must not become giant ad-hoc shell scripts or duplicate entire templates for each combination.
 
 ## Invariants
@@ -48,6 +50,7 @@ Recipes may contribute files, dependencies, configuration, transformations, comm
 - Write `metonia-admin.config.ts`, generated `AGENTS.md`, and generated `README.md` from resolved configuration.
 - Generated code remains maintainable without the Metonia CLI.
 - Package-manager behavior belongs behind package-manager adapters.
+- Package-manager adapters own their version probe and package-manifest security resolution fields.
 
 ## Extension Procedure
 

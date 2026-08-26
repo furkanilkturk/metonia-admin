@@ -19,6 +19,7 @@ export class DashboardState {
 		return this.operations.filter((operation) => {
 			const matchesQuery =
 				query.length === 0 ||
+				operation.id.toLocaleLowerCase().includes(query) ||
 				operation.name.toLocaleLowerCase().includes(query) ||
 				operation.owner.toLocaleLowerCase().includes(query);
 			const matchesStatus = this.status === 'all' || operation.status === this.status;

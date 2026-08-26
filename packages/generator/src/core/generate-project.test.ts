@@ -475,6 +475,33 @@ describe('generateProject', () => {
 		expect(await exists(destination)).toBeFalse();
 		expect((await readdir(root)).some((entry) => entry.includes('.metonia-staging-'))).toBeFalse();
 	});
+
+	test('terminates descendants of a timed-out production command', async () => {
+		const root = await createTestRoot();
+		const destination = join(root, 'timed out tree');
+		const survivorMarker = join(root, 'descendant-survived.txt');
+		const descendantScript = `setTimeout(() => require('node:fs').writeFileSync(${JSON.stringify(survivorMarker)}, 'alive'), 500); setInterval(() => {}, 1000);`;
+		const parentScript = `require('node:child_process').spawn(process.execPath, ['-e', ${JSON.stringify(descendantScript)}], { stdio: 'ignore' }); setInterval(() => {}, 1000);`;
+		const result = await generateProject(
+			{
+				config: testConfig(),
+				destination,
+				operations: {
+					install: { executable: process.execPath, arguments: ['-e', parentScript] }
+				},
+				recipes: [writeRecipe('base')]
+			},
+			{ commandTimeoutMs: 100 }
+		);
+
+		expect(result).toMatchObject({
+			ok: false,
+			error: { code: 'INSTALL_FAILED', stage: 'install-dependencies' }
+		});
+		await delay(650);
+		expect(await exists(survivorMarker)).toBeFalse();
+		expect(await exists(destination)).toBeFalse();
+	});
 });
 
 function recipe(id: string, stage: Recipe['stage'], sequence: string[]): Recipe {

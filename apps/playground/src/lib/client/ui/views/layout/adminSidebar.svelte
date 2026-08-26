@@ -1,5 +1,8 @@
 <script lang="ts">
-	import { adminNavigation } from '$lib/client/navigation/adminNavigation.js';
+	import {
+		adminNavigation,
+		isAdminNavigationItemActive
+	} from '$lib/client/navigation/adminNavigation.js';
 	import AppIcon from '$lib/client/ui/components/app-icon.svelte';
 
 	interface Props {
@@ -9,6 +12,7 @@
 	}
 
 	let { mode = 'desktop', onNavigate, pathname }: Props = $props();
+	const isActive = (href: string) => isAdminNavigationItemActive(pathname, href);
 </script>
 
 <aside
@@ -38,17 +42,17 @@
 					<a
 						href={item.href}
 						onclick={onNavigate}
-						aria-current={pathname === item.href ? 'page' : undefined}
+						aria-current={isActive(item.href) ? 'page' : undefined}
 						class={[
 							'group relative flex min-h-10 items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-							pathname === item.href
+							isActive(item.href)
 								? 'bg-sidebar-accent text-sidebar-accent-foreground before:absolute before:-left-3 before:h-6 before:w-0.5 before:rounded-r before:bg-brand'
 								: 'text-sidebar-foreground/68 hover:bg-sidebar-accent/65 hover:text-sidebar-accent-foreground'
 						]}
 					>
 						<AppIcon name={item.icon} class="size-4 shrink-0" aria-hidden="true" />
 						<span class="min-w-0 flex-1 truncate">{item.label}</span>
-						{#if pathname === item.href}
+						{#if isActive(item.href)}
 							<AppIcon name="arrow-right" class="size-3.5 shrink-0" aria-hidden="true" />
 						{/if}
 					</a>

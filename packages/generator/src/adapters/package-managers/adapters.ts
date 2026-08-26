@@ -35,6 +35,9 @@ const definitions = Object.freeze({
 		addDev: ['add', '--development'],
 		run: ['run'],
 		exec: [],
+		manifestFields: {
+			overrides: { cookie: '0.7.2', esbuild: '0.28.2' }
+		},
 		docker: {
 			buildImage: 'oven/bun:1.4.0',
 			dependencyFiles: ['package.json', 'bun.lock'],
@@ -55,6 +58,12 @@ const definitions = Object.freeze({
 		addDev: ['install', '--save-dev'],
 		run: ['run'],
 		exec: ['--yes'],
+		manifestFields: {
+			overrides: {
+				'@esbuild-kit/core-utils': { esbuild: '0.28.2' },
+				'@sveltejs/kit': { cookie: '0.7.2' }
+			}
+		},
 		docker: {
 			buildImage: 'node:24.19.0-bookworm-slim',
 			dependencyFiles: ['package.json', 'package-lock.json'],
@@ -75,6 +84,14 @@ const definitions = Object.freeze({
 		addDev: ['add', '--save-dev'],
 		run: ['run'],
 		exec: ['dlx'],
+		manifestFields: {
+			pnpm: {
+				overrides: {
+					'@esbuild-kit/core-utils>esbuild': '0.28.2',
+					'@sveltejs/kit>cookie': '0.7.2'
+				}
+			}
+		},
 		configurationFiles: {
 			'pnpm-workspace.yaml':
 				'allowBuilds:\n  esbuild: true\n  "@hugeicons/svelte@1.1.5": true\nminimumReleaseAgeExclude:\n  - "@lucide/svelte@1.34.0"\n  - "@tabler/icons-svelte@3.46.0"\n  - "@hugeicons/svelte@1.1.5"\n  - "@hugeicons/core-free-icons@4.3.0"\n  - "phosphor-svelte@3.1.0"\n  - "remixicon-svelte@0.0.5"\n'
@@ -100,6 +117,12 @@ const definitions = Object.freeze({
 		run: ['run'],
 		exec: ['dlx'],
 		initialLockfileContents: '',
+		manifestFields: {
+			resolutions: {
+				'@esbuild-kit/core-utils/esbuild': '0.28.2',
+				'@sveltejs/kit/cookie': '0.7.2'
+			}
+		},
 		configurationFiles: {
 			'.yarnrc.yml':
 				'nodeLinker: node-modules\nnpmPreapprovedPackages:\n  - "@lucide/svelte@1.34.0"\n  - "@tabler/icons-svelte@3.46.0"\n  - "@hugeicons/svelte@1.1.5"\n  - "@hugeicons/core-free-icons@4.3.0"\n  - "phosphor-svelte@3.1.0"\n  - "remixicon-svelte@0.0.5"\n'
@@ -174,6 +197,7 @@ function createAdapter(definition: PackageManagerAdapterDefinition): PackageMana
 			? {}
 			: { initialLockfileContents: definition.initialLockfileContents }),
 		configurationFiles: Object.freeze({ ...(definition.configurationFiles ?? {}) }),
+		manifestFields: Object.freeze({ ...(definition.manifestFields ?? {}) }),
 		...(definition.docker === undefined
 			? {}
 			: {
@@ -191,6 +215,7 @@ function createAdapter(definition: PackageManagerAdapterDefinition): PackageMana
 						)
 					})
 				}),
+		versionCommand: command(definition.executable, ['--version']),
 		installCommand,
 		frozenInstallCommand,
 		add: (packages: readonly string[]) =>

@@ -60,7 +60,7 @@ export function createBaseRecipe(): Recipe {
 			await assertExpectedScaffold(context);
 			await context.writeFile(
 				'package.json',
-				renderPackageManifest(context.config.projectName, packageManager.packageManagerField)
+				renderPackageManifest(context.config.projectName, packageManager)
 			);
 			await context.writeFile('vite.config.ts', await readCommonAsset('vite.config.ts'));
 			await context.writeFile(
@@ -133,15 +133,19 @@ async function assertExpectedScaffold(context: RecipeContext): Promise<void> {
 	}
 }
 
-function renderPackageManifest(projectName: string, packageManagerField: string): string {
+function renderPackageManifest(
+	projectName: string,
+	packageManager: ReturnType<typeof getImplementedPackageManagerAdapter>
+): string {
 	return `${JSON.stringify(
 		{
 			name: projectName,
 			private: true,
 			version: '0.0.1',
 			type: 'module',
-			packageManager: packageManagerField,
+			packageManager: packageManager.packageManagerField,
 			engines: { node: '^22.22.2 || ^24.15.0 || >=26.0.0' },
+			...packageManager.manifestFields,
 			scripts: generatedScripts,
 			devDependencies: generatedDevDependencies
 		},
@@ -157,6 +161,9 @@ async function validatePinnedBase(context: RecipeContext): Promise<void> {
 	const devDependencies = getStringRecord(packageJson.devDependencies);
 	if (
 		packageJson.packageManager !== packageManager.packageManagerField ||
+		Object.entries(packageManager.manifestFields).some(
+			([key, value]) => JSON.stringify(packageJson[key]) !== JSON.stringify(value)
+		) ||
 		Object.entries(generatedScripts).some(([name, command]) => scripts[name] !== command) ||
 		Object.entries(generatedDevDependencies).some(
 			([name, version]) => devDependencies[name] !== version

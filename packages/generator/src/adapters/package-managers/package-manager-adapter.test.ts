@@ -62,6 +62,10 @@ describe('generated-project package-manager adapters', () => {
 			const adapter = getPackageManagerAdapter(id);
 			const contract = expected[id];
 			expect(adapter.version).toBe(packageManagerVersions[id]);
+			expect(tokens(adapter.versionCommand)).toEqual([
+				adapter.installCommand.executable,
+				'--version'
+			]);
 			expect(adapter.packageManagerField).toBe(contract.field);
 			expect(tokens(adapter.installCommand)).toEqual(contract.install);
 			expect(tokens(adapter.frozenInstallCommand)).toEqual(contract.frozen);
@@ -83,6 +87,20 @@ describe('generated-project package-manager adapters', () => {
 		expect(() => getImplementedPackageManagerAdapter('deno')).toThrow(
 			'complete shadcn-svelte, Drizzle, PostgreSQL, adapter-node, and Docker matrix'
 		);
+	});
+
+	test('keeps security resolutions in package-manager-owned manifest fields', () => {
+		expect(getPackageManagerAdapter('bun').manifestFields).toEqual({
+			overrides: { cookie: '0.7.2', esbuild: '0.28.2' }
+		});
+		expect(getPackageManagerAdapter('npm').manifestFields).toEqual({
+			overrides: {
+				'@esbuild-kit/core-utils': { esbuild: '0.28.2' },
+				'@sveltejs/kit': { cookie: '0.7.2' }
+			}
+		});
+		expect(getPackageManagerAdapter('pnpm').manifestFields).toHaveProperty('pnpm.overrides');
+		expect(getPackageManagerAdapter('yarn').manifestFields).toHaveProperty('resolutions');
 	});
 
 	test('gives modern Yarn an empty local lock boundary before its first install', () => {

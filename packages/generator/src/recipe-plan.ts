@@ -1,4 +1,5 @@
 import type { PackageManagerId, ResolvedConfig } from '@metonia-admin/registry';
+import spawn from 'cross-spawn';
 
 import {
 	getPackageManagerAdapter,
@@ -58,6 +59,12 @@ export interface RecipePlan {
 
 export interface BunRecipePlan extends RecipePlan {
 	readonly packageManager: 'bun';
+}
+
+export type PackageManagerVersionResolver = (adapter: PackageManagerAdapter) => Promise<string>;
+
+export interface GenerateConfiguredProjectDependencies extends GenerateProjectDependencies {
+	readonly resolvePackageManagerVersion?: PackageManagerVersionResolver;
 }
 
 /**
@@ -164,7 +171,7 @@ export function createBunRecipePlan(config: ResolvedConfig): BunRecipePlan {
  */
 export async function generateConfiguredProject(
 	request: GenerateConfiguredProjectRequest,
-	dependencies: GenerateProjectDependencies = {}
+	dependencies: GenerateConfiguredProjectDependencies = {}
 ): Promise<GenerateResult> {
 	let plan: RecipePlan;
 	reportPlanProgress(dependencies, 'started');
@@ -188,6 +195,29 @@ export async function generateConfiguredProject(
 			ok: false,
 			stages: []
 		};
+	}
+	if (request.install) {
+		let installedVersion: string;
+		try {
+			installedVersion = (
+				await (dependencies.resolvePackageManagerVersion ?? resolvePackageManagerVersion)(
+					plan.packageManagerAdapter
+				)
+			).trim();
+		} catch {
+			return planFailure(
+				request.destination,
+				'PACKAGE_MANAGER_VERSION_CHECK_FAILED',
+				`Unable to verify ${plan.packageManagerAdapter.label} ${plan.packageManagerAdapter.version}. Make sure that exact version is available and retry.`
+			);
+		}
+		if (installedVersion !== plan.packageManagerAdapter.version) {
+			return planFailure(
+				request.destination,
+				'PACKAGE_MANAGER_VERSION_MISMATCH',
+				`${plan.packageManagerAdapter.label} ${plan.packageManagerAdapter.version} is required, but ${safeVersionLabel(installedVersion)} is active. Activate the required version and retry.`
+			);
+		}
 	}
 	reportPlanProgress(dependencies, 'completed');
 
@@ -234,4 +264,53 @@ function emptyFacts(): GenerateResult['facts'] {
 		documentFacts: {},
 		scripts: {}
 	};
+}
+
+function planFailure(
+	destination: string,
+	code: 'PACKAGE_MANAGER_VERSION_CHECK_FAILED' | 'PACKAGE_MANAGER_VERSION_MISMATCH',
+	message: string
+): GenerateResult {
+	return {
+		destination,
+		error: { code, message, stage: 'resolve-plan' },
+		facts: emptyFacts(),
+		ok: false,
+		stages: []
+	};
+}
+
+function resolvePackageManagerVersion(adapter: PackageManagerAdapter): Promise<string> {
+	return new Promise((resolveVersion, rejectVersion) => {
+		const child = spawn(adapter.versionCommand.executable, adapter.versionCommand.arguments, {
+			shell: false,
+			stdio: ['ignore', 'pipe', 'ignore'],
+			windowsHide: true
+		});
+		let stdout = '';
+		const timeout = setTimeout(() => {
+			child.kill('SIGKILL');
+			rejectVersion(new Error('Package-manager version check timed out.'));
+		}, 10_000);
+		child.stdout?.setEncoding('utf8');
+		child.stdout?.on('data', (chunk: string) => {
+			if (stdout.length < 256) stdout += chunk;
+		});
+		child.once('error', (error) => {
+			clearTimeout(timeout);
+			rejectVersion(error);
+		});
+		child.once('close', (code) => {
+			clearTimeout(timeout);
+			if (code !== 0) {
+				rejectVersion(new Error('Package-manager version check failed.'));
+				return;
+			}
+			resolveVersion(stdout.trim());
+		});
+	});
+}
+
+function safeVersionLabel(version: string): string {
+	return /^[A-Za-z0-9._+-]{1,64}$/.test(version) ? version : 'an unexpected version';
 }

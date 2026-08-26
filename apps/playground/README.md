@@ -78,8 +78,8 @@ The resolved configuration is captured as an import-free literal in `metonia-adm
 
 - The complete primary stack passed generation, install, frozen install, check, test, and build on Windows x64 with Bun 1.4.0 and Node 24.19.0; repeatable multi-OS release evidence remains pending.
 - The shadcn-svelte Nova adapter targeting $lib/client/ui/components passed deterministic generation, Svelte autofix, responsive visual review, install, check, test, and build on the primary Windows stack; multi-OS release evidence remains pending.
-- The checked-in shadcn-svelte zinc Nova base-color snapshot passed deterministic generation on the primary Windows stack; repeatable multi-OS release evidence remains pending.
-- The shadcn-svelte Lucide icon-library contract is implemented and generated-project validation is required before release; repeatable multi-OS evidence remains pending.
+- The checked-in shadcn-svelte zinc Nova base-color snapshot passed deterministic generation, responsive visual review, install, check, test, and build on the primary Windows stack; repeatable multi-OS release evidence remains pending.
+- The shadcn-svelte Lucide icon-library contract passed deterministic generation plus generated-project install, check, test, and build on Windows x64; repeatable multi-OS evidence remains pending.
 - Remote Functions remain experimental upstream. Metonia's validated query-boundary proof passed a fresh install, check, test, build, and Node request on Windows, but does not yet provide Users CRUD parity.
 - The Zod adapter passed generated-project validation, check/test/build, and real Users mutation tests on Windows; repeatable multi-OS release evidence remains pending.
 - The Drizzle adapter passed generated migration checks and real PostgreSQL Users repository/service runtime tests on Windows; repeatable multi-OS release evidence remains pending.

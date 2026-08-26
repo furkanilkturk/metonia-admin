@@ -20,11 +20,14 @@
 	import TriangleAlertIcon from '@lucide/svelte/icons/triangle-alert';
 	import UsersIcon from '@lucide/svelte/icons/users';
 	import XIcon from '@lucide/svelte/icons/x';
-	import type { Component, ComponentProps } from 'svelte';
 
 	export type AppIconName = 'arrow-left' | 'arrow-right' | 'arrow-up-right' | 'check' | 'chevron-down' | 'chevron-right' | 'chevron-up' | 'circle-alert' | 'circle-check' | 'clock' | 'dashboard' | 'ellipsis' | 'menu' | 'minus' | 'refresh' | 'search' | 'search-empty' | 'settings' | 'triangle-alert' | 'users' | 'x';
-	type IconComponent = Component<Record<string, unknown>>;
-	type Props = ComponentProps<IconComponent> & { name: AppIconName };
+	type Props = {
+		name: AppIconName;
+		class?: string;
+		'aria-hidden'?: boolean | 'true' | 'false';
+		'data-icon'?: string;
+	};
 	const icons = {
 	'arrow-left': ArrowLeftIcon,
 	'arrow-right': ArrowRightIcon,
@@ -47,7 +50,7 @@
 	'triangle-alert': TriangleAlertIcon,
 	'users': UsersIcon,
 	'x': XIcon
-	} satisfies Record<AppIconName, IconComponent>;
+	} as const;
 	let { name, ...restProps }: Props = $props();
 	let Icon = $derived(icons[name]);
 </script>

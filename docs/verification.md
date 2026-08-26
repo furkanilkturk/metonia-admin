@@ -22,6 +22,15 @@ The exact generated versions are also pinned by the generator. Deno 2.9.5 is rep
 - Generator-core tests cover traversal and symlink rejection, owned staging, ordered recipes, validation failures, command timeouts, existing destinations, finalization rollback, and cleanup.
 - A Windows-only transient-lock retry is limited to `EACCES`, `EBUSY`, and `EPERM` during publication; every destination and rollback check still runs.
 
+### 2026-08-26 review remediation
+
+- Install-enabled generation now probes the selected package manager and fails during `resolve-plan`, before staging, unless its reported version exactly matches the adapter's pinned `packageManager` version. The ordinary local suite verified the expected Bun 1.3.14 rejection, while a temporary PATH using Bun 1.4.0 completed fresh CLI generation, install, frozen install, Svelte check, Vitest, adapter-node build, and audit.
+- Timed-out staged commands now terminate their process tree. A Windows regression launches a descendant that would write a delayed marker; timeout cleanup killed both processes, left no marker, and removed unpublished staging output.
+- Root and freshly generated Bun dependency graphs use reviewed patched `cookie@0.7.2` and `esbuild@0.28.2` resolutions. Both `bun audit` runs reported no vulnerabilities.
+- Compose was rendered with a synthetic password containing spaces and URL/Compose-significant punctuation. The value remained in `PGPASSWORD`, did not enter `DATABASE_URL`, and the Docker recipe tests passed for Bun, npm, pnpm, and Yarn output.
+- `apps/reference-admin` and `apps/playground` were regenerated from the built CLI. Their README evidence, icon typing, navigation matching, Dashboard ID search, database client, and package-manifest security policy now match fresh output.
+- `.github/workflows/ci.yml` now runs the ordinary Bun-first gates, each exact generated-package-manager matrix row, the opt-in Bun Remote/Users/UI/icon builds, and the disposable PostgreSQL Users runtime gate. The matrix test accepts a CI-only manager selector so each job installs and exercises one exact toolchain without weakening the all-manager local opt-in mode.
+
 ### Portable CLI artifact
 
 npm 12.0.2 packed the CLI into a 1,458,188-byte tarball (5,232,694 bytes unpacked, 190 entries). Installing that tarball produced zero runtime dependencies because the Node-targeted CLI contains its registry and generator implementation plus required runtime assets. Under exact Node 24.19.0, the installed Windows bin shim passed `--help` and generated a real project in a path containing spaces with `--json --no-install --no-git`; stdout contained exactly one JSON line and stderr was empty. Bundle scans found no `Bun.*` runtime use and no external `@metonia-admin/*` imports. POSIX executable-mode verification remains a multi-OS publication gate because Windows reports the packed bin as mode 0644 even though the installed Windows shim works.

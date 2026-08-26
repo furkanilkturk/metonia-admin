@@ -22,3 +22,11 @@ export const adminNavigation = Object.freeze([
 		label: 'Settings'
 	}
 ] satisfies readonly AdminNavigationItem[]);
+
+export function isAdminNavigationItemActive(pathname: string, href: string): boolean {
+	return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+export function activeAdminNavigationItem(pathname: string): AdminNavigationItem | undefined {
+	return adminNavigation.find((item) => isAdminNavigationItemActive(pathname, item.href));
+}

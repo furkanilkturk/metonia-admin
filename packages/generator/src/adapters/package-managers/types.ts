@@ -27,8 +27,11 @@ export interface PackageManagerAdapter {
 	readonly initialLockfileContents?: string;
 	/** Manager-owned project configuration required for deterministic, policy-compliant installs. */
 	readonly configurationFiles: Readonly<Record<string, string>>;
+	/** Manager-native package.json policy such as transitive security resolutions. */
+	readonly manifestFields: Readonly<Record<string, unknown>>;
 	/** Package-manager-owned inputs and commands for a deterministic container build. */
 	readonly docker?: PackageManagerDockerPlan;
+	readonly versionCommand: StagedCommandPlan;
 	readonly installCommand: StagedCommandPlan;
 	readonly frozenInstallCommand: StagedCommandPlan;
 	add(packages: readonly string[]): StagedCommandPlan;
@@ -55,6 +58,7 @@ export interface PackageManagerAdapterDefinition {
 	readonly packageSpecifierPrefix?: string;
 	readonly initialLockfileContents?: string;
 	readonly configurationFiles?: Readonly<Record<string, string>>;
+	readonly manifestFields?: Readonly<Record<string, unknown>>;
 	readonly docker?: {
 		readonly buildImage: string;
 		readonly dependencyFiles: readonly string[];

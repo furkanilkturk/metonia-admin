@@ -6,6 +6,8 @@ import { lstat, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { basename, join, relative, resolve } from 'node:path';
 
+import { packageManagerVersions } from '../../packages/generator/src/adapters/package-managers/index.js';
+
 const repositoryRoot = resolve(import.meta.dir, '..', '..');
 const cliArtifact = join(repositoryRoot, 'packages', 'cli', 'dist', 'create-metonia-admin.js');
 const temporaryRoots: string[] = [];
@@ -16,7 +18,7 @@ afterAll(async () => {
 }, 60_000);
 
 describe('fresh Bun generated-project gate', () => {
-	test('generates, installs, checks, tests, and builds through the Node CLI artifact', async () => {
+	test('enforces the pinned Bun version, then runs the complete Node CLI artifact gate', async () => {
 		const root = await createTestRoot();
 		const destination = join(root, 'generated integration project');
 		const nodeExecutable = process.env.METONIA_NODE_EXECUTABLE ?? 'node';
@@ -31,19 +33,32 @@ describe('fresh Bun generated-project gate', () => {
 				repositoryRoot
 			)
 		);
+		if (records[0]?.stdout.trim() !== packageManagerVersions.bun) {
+			console.info(formatCommandRecords(records));
+			expect(records[1]?.exitCode).toBe(2);
+			expect(JSON.parse(records[1]?.stdout ?? '')).toMatchObject({
+				ok: false,
+				error: { code: 'PACKAGE_MANAGER_VERSION_MISMATCH', stage: 'resolve-plan' }
+			});
+			expect(await exists(destination)).toBeFalse();
+			return;
+		}
 		if (records.at(-1)?.exitCode === 0) {
 			records.push(await runCommand(bunExecutable, ['run', 'check'], destination));
 			records.push(await runCommand(bunExecutable, ['run', 'test'], destination));
 			records.push(await runCommand(bunExecutable, ['run', 'build'], destination));
+			records.push(await runCommand(bunExecutable, ['audit'], destination));
 		}
 
 		console.info(formatCommandRecords(records));
 		expect(records[0]?.stdout.trim().length).toBeGreaterThan(0);
 		for (const record of records) expect(record.exitCode).toBe(0);
-		expect(records).toHaveLength(5);
+		expect(records).toHaveLength(6);
 		expect(await exists(join(destination, 'bun.lock'))).toBeTrue();
 		expect(await exists(join(destination, 'build', 'index.js'))).toBeTrue();
-		expect(await exists(join(destination, 'src', 'routes', '(admin)', 'users', '+page.svelte'))).toBeTrue();
+		expect(
+			await exists(join(destination, 'src', 'routes', '(admin)', 'users', '+page.svelte'))
+		).toBeTrue();
 		expect(await exists(join(destination, 'drizzle', '0000_create_users.sql'))).toBeTrue();
 	}, 180_000);
 });

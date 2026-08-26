@@ -19,9 +19,11 @@ export function getDatabase(): NodePgDatabase<typeof schema> {
 	if (database) return database;
 	const connectionString = env.DATABASE_URL?.trim();
 	if (!connectionString) throw new DatabaseConfigurationError();
+	const password = env.PGPASSWORD?.trim();
 
 	pool = new Pool({
 		connectionString,
+		...(password ? { password } : {}),
 		max: 10,
 		idleTimeoutMillis: 30_000,
 		connectionTimeoutMillis: 5_000

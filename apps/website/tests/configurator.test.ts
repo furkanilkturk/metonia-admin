@@ -61,6 +61,8 @@ test('preview uses canonical resolved capability IDs and labels remote as an exp
 	const command = previewCommand(result.config);
 	expect(command).toStartWith('npx create-metonia-admin@latest');
 	expect(command).toContain('--data-pattern remote-functions');
+	expect(command).not.toContain('\\');
+	expect(command).not.toContain('\n');
 	expect(
 		result.config.warnings.some((warning) => warning.code === 'experimental-capability')
 	).toBeTrue();

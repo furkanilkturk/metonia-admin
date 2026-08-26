@@ -117,6 +117,10 @@ async function validateDockerOutput(context: StagedValidationContext): Promise<v
 		!compose.includes('pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB') ||
 		!compose.includes('metonia-postgres-data') ||
 		!compose.includes('DATABASE_URL:') ||
+		!compose.includes('PGPASSWORD: "${POSTGRES_PASSWORD:') ||
+		compose.includes(
+			'${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env before starting Compose.}@'
+		) ||
 		!compose.includes("fetch('http://127.0.0.1:3000/')") ||
 		!compose.includes('stop_grace_period: 30s') ||
 		!compose.includes('ORIGIN:')
@@ -126,7 +130,7 @@ async function validateDockerOutput(context: StagedValidationContext): Promise<v
 		);
 	}
 	const output = `${dockerfile}\n${compose}`;
-	const hasBakedPassword = /^\s*POSTGRES_PASSWORD:\s*(?!\$\{)\S/m.test(output);
+	const hasBakedPassword = /^\s*(?:POSTGRES_PASSWORD|PGPASSWORD):\s*(?!"?\$\{)\S/m.test(output);
 	const hasNamedSecret = /(?:api[_-]?key|secret)\s*[:=]\s*['"]?[A-Za-z0-9_-]{12,}/i.test(output);
 	if (hasBakedPassword || hasNamedSecret) {
 		throw new Error('Docker output must not contain a baked credential or secret.');

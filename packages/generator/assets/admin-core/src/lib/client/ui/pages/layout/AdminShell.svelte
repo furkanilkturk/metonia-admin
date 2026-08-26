@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { adminNavigation } from '$lib/client/navigation/adminNavigation.js';
+	import { activeAdminNavigationItem } from '$lib/client/navigation/adminNavigation.js';
 	import { Button } from '$lib/client/ui/components/button/index.js';
 	import AppIcon from '$lib/client/ui/components/app-icon.svelte';
 	import * as Dialog from '$lib/client/ui/components/dialog/index.js';
@@ -12,9 +12,7 @@
 	let navigationOpen = $state(false);
 	let pathname = $derived(page.url.pathname);
 	let isNavigating = $derived(Boolean(navigating.to));
-	let currentLabel = $derived(
-		adminNavigation.find((item) => item.href === pathname)?.label ?? 'Workspace'
-	);
+	let currentLabel = $derived(activeAdminNavigationItem(pathname)?.label ?? 'Workspace');
 </script>
 
 {#if isNavigating}

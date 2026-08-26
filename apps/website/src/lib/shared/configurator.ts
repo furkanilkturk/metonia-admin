@@ -98,7 +98,7 @@ export function previewCommand(config: ResolvedConfig | undefined): string {
 		config.resources.users ? '--users' : '--no-users',
 		'--yes'
 	];
-	return bits.join(' \\\n  ');
+	return bits.join(' ');
 }
 
 export function choicesFor(
